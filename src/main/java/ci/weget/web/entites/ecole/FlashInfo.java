@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.ecole;
 
 import java.time.LocalDate;
 
@@ -10,6 +10,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_FlashInfo")
@@ -23,8 +25,8 @@ public class FlashInfo extends AbstractEntity{
     private LocalDate date;
     
     @ManyToOne(cascade = CascadeType.MERGE,fetch = FetchType.EAGER)
-	@JoinColumn(name = "id_DetailAbonnement")
-	private DetailAbonnement detailAbonnement;
+	@JoinColumn(name = "id_Ecole")
+	private Ecole ecole;
 	public FlashInfo() {
 		super();
 		
@@ -60,11 +62,11 @@ public class FlashInfo extends AbstractEntity{
 	public void setDate() {
 		this.date = LocalDate.now();
 	}
-	public DetailAbonnement getDetailAbonnement() {
-		return detailAbonnement;
+	public Ecole getDetailAbonnement() {
+		return ecole;
 	}
-	public void setDetailAbonnement(DetailAbonnement detailAbonnement) {
-		this.detailAbonnement = detailAbonnement;
+	public void setDetailAbonnement(Ecole detailAbonnement) {
+		this.ecole = detailAbonnement;
 	}
 	
 }

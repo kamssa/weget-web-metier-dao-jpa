@@ -1,14 +1,21 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.abonnement;
 
 import java.time.LocalDateTime;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
+
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.personne.Membre;
 
 @Entity
 @Table(name = "T_Abonnement")
@@ -18,18 +25,21 @@ public class Abonnement extends AbstractEntity {
 	private String description;
 	private String pathPhoto;
 	private String pathPhotoCouveture;
-
+	private LocalDateTime dateAbonnement;
 	private static final long serialVersionUID = 1L;
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Personne")
 	private Membre membre;
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-	@JoinColumn(name = "id_Block")
-	private Block block;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_Espace")
+	private Espace espace;
+	
 
 	private int nombreVue;
 	private LocalDateTime dateExpire;
+	private LocalDateTime dateExpireAbonneSpecial;
+
 	private boolean active;
 	private boolean abonneSpecial;
 	private boolean free;
@@ -37,32 +47,53 @@ public class Abonnement extends AbstractEntity {
 	private boolean utlisateurBanni;
 	private boolean utlisateurSuspendu;
 	private boolean utlisateurEnAttente;
-	@Column(name = "id_Block", insertable = false, updatable = false)
-	private long idBlock;
+
+	@Column(name = "id_Espace", insertable = false, updatable = false)
+	private long idEspace;
 	@Column(name = "id_Personne", insertable = false, updatable = false)
 	private long idPersone;
-	
+	private double longitude;
+    private double latitude;
+
 	public Abonnement() {
 		super();
 
 	}
 
-	public Abonnement(Membre membre, Block block) {
+	public Abonnement(Membre membre, Espace block) {
 		super();
 		this.membre = membre;
-		this.block = block;
-	}
-
-	public Abonnement(String description, String pathPhoto, String pathPhotoCouveture, Membre membre, Block block) {
-		super();
-		this.description = description;
-		this.pathPhoto = pathPhoto;
-		this.pathPhotoCouveture = pathPhotoCouveture;
-		this.membre = membre;
-		this.block = block;
+		this.espace = block;
 	}
 
 	
+	public Abonnement(String description, LocalDateTime dateAbonnement, Membre membre, Espace espace,
+			int nombreVue, LocalDateTime dateExpire, LocalDateTime dateExpireAbonneSpecial, boolean active,
+			boolean abonneSpecial, boolean free, LocalDateTime dategratuite, boolean utlisateurBanni,
+			boolean utlisateurSuspendu, boolean utlisateurEnAttente, long idEspace, long idPersone, double longitude,
+			double latitude) {
+		super();
+		this.description = description;
+		this.dateAbonnement = dateAbonnement;
+		this.membre = membre;
+		this.espace = espace;
+		
+		this.nombreVue = nombreVue;
+		this.dateExpire = dateExpire;
+		this.dateExpireAbonneSpecial = dateExpireAbonneSpecial;
+		this.active = active;
+		this.abonneSpecial = abonneSpecial;
+		this.free = free;
+		this.dategratuite = dategratuite;
+		this.utlisateurBanni = utlisateurBanni;
+		this.utlisateurSuspendu = utlisateurSuspendu;
+		this.utlisateurEnAttente = utlisateurEnAttente;
+		this.idEspace = idEspace;
+		this.idPersone = idPersone;
+		this.longitude = longitude;
+		this.latitude = latitude;
+	}
+
 	public boolean isFree() {
 		return free;
 	}
@@ -71,13 +102,7 @@ public class Abonnement extends AbstractEntity {
 		this.free = free;
 	}
 
-	public Block getBlock() {
-		return block;
-	}
-
-	public void setBlocks(Block block) {
-		this.block = block;
-	}
+	
 
 	public String getDescription() {
 		return description;
@@ -87,32 +112,24 @@ public class Abonnement extends AbstractEntity {
 		this.description = description;
 	}
 
-	public long getIdBlock() {
-		return idBlock;
+	
+
+	public LocalDateTime getDateAbonnement() {
+		return dateAbonnement;
+	}
+
+	public void setDateAbonnement(LocalDateTime dateAbonnement) {
+		this.dateAbonnement = dateAbonnement;
+	}
+
+	@PostPersist
+	@PostUpdate
+	public void setDateAbonnement() {
+		this.dateAbonnement = LocalDateTime.now();
 	}
 
 	public long getIdPersone() {
 		return idPersone;
-	}
-
-	public void setBlock(Block block) {
-		this.block = block;
-	}
-
-	public String getPathPhoto() {
-		return pathPhoto;
-	}
-
-	public void setPathPhoto(String pathPhoto) {
-		this.pathPhoto = pathPhoto;
-	}
-
-	public String getPathPhotoCouveture() {
-		return pathPhotoCouveture;
-	}
-
-	public void setPathPhotoCouveture(String pathPhotoCouveture) {
-		this.pathPhotoCouveture = pathPhotoCouveture;
 	}
 
 	public Membre getMembre() {
@@ -187,12 +204,69 @@ public class Abonnement extends AbstractEntity {
 		this.utlisateurEnAttente = utlisateurEnAttente;
 	}
 
-	public void setIdBlock(long idBlock) {
-		this.idBlock = idBlock;
+	public double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(double longitude) {
+		this.longitude = longitude;
+	}
+
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(double latitude) {
+		this.latitude = latitude;
+	}
+	
+
+	public Espace getEspace() {
+		return espace;
+	}
+
+	public void setEspace(Espace espace) {
+		this.espace = espace;
+	}
+
+	
+
+	public long getIdEspace() {
+		return idEspace;
+	}
+
+	public LocalDateTime getDateExpireAbonneSpecial() {
+		return dateExpireAbonneSpecial;
+	}
+
+	public void setDateExpireAbonneSpecial(LocalDateTime dateExpireAbonneSpecial) {
+		this.dateExpireAbonneSpecial = dateExpireAbonneSpecial;
+	}
+
+	
+
+	public void setIdEspace(long idEspace) {
+		this.idEspace = idEspace;
 	}
 
 	public void setIdPersone(long idPersone) {
 		this.idPersone = idPersone;
+	}
+
+	public String getPathPhoto() {
+		return pathPhoto;
+	}
+
+	public void setPathPhoto(String pathPhoto) {
+		this.pathPhoto = pathPhoto;
+	}
+
+	public String getPathPhotoCouveture() {
+		return pathPhotoCouveture;
+	}
+
+	public void setPathPhotoCouveture(String pathPhotoCouveture) {
+		this.pathPhotoCouveture = pathPhotoCouveture;
 	}
 
 	@Override
@@ -201,14 +275,25 @@ public class Abonnement extends AbstractEntity {
 		int result = super.hashCode();
 		result = prime * result + (abonneSpecial ? 1231 : 1237);
 		result = prime * result + (active ? 1231 : 1237);
-		result = prime * result + ((block == null) ? 0 : block.hashCode());
+		result = prime * result + ((dateAbonnement == null) ? 0 : dateAbonnement.hashCode());
 		result = prime * result + ((dateExpire == null) ? 0 : dateExpire.hashCode());
+		result = prime * result + ((dateExpireAbonneSpecial == null) ? 0 : dateExpireAbonneSpecial.hashCode());
 		result = prime * result + ((dategratuite == null) ? 0 : dategratuite.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((espace == null) ? 0 : espace.hashCode());
+		result = prime * result + (free ? 1231 : 1237);
+		result = prime * result + (int) (idEspace ^ (idEspace >>> 32));
+		result = prime * result + (int) (idPersone ^ (idPersone >>> 32));
+		long temp;
+		temp = Double.doubleToLongBits(latitude);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(longitude);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
 		result = prime * result + ((membre == null) ? 0 : membre.hashCode());
 		result = prime * result + nombreVue;
-		result = prime * result + ((pathPhoto == null) ? 0 : pathPhoto.hashCode());
-		result = prime * result + ((pathPhotoCouveture == null) ? 0 : pathPhotoCouveture.hashCode());
+		result = prime * result + (utlisateurBanni ? 1231 : 1237);
+		result = prime * result + (utlisateurEnAttente ? 1231 : 1237);
+		result = prime * result + (utlisateurSuspendu ? 1231 : 1237);
 		return result;
 	}
 
@@ -225,15 +310,20 @@ public class Abonnement extends AbstractEntity {
 			return false;
 		if (active != other.active)
 			return false;
-		if (block == null) {
-			if (other.block != null)
+		if (dateAbonnement == null) {
+			if (other.dateAbonnement != null)
 				return false;
-		} else if (!block.equals(other.block))
+		} else if (!dateAbonnement.equals(other.dateAbonnement))
 			return false;
 		if (dateExpire == null) {
 			if (other.dateExpire != null)
 				return false;
 		} else if (!dateExpire.equals(other.dateExpire))
+			return false;
+		if (dateExpireAbonneSpecial == null) {
+			if (other.dateExpireAbonneSpecial != null)
+				return false;
+		} else if (!dateExpireAbonneSpecial.equals(other.dateExpireAbonneSpecial))
 			return false;
 		if (dategratuite == null) {
 			if (other.dategratuite != null)
@@ -245,6 +335,22 @@ public class Abonnement extends AbstractEntity {
 				return false;
 		} else if (!description.equals(other.description))
 			return false;
+		if (espace == null) {
+			if (other.espace != null)
+				return false;
+		} else if (!espace.equals(other.espace))
+			return false;
+		if (free != other.free)
+			return false;
+		if (idEspace != other.idEspace)
+			return false;
+		if (idPersone != other.idPersone)
+			return false;
+		
+		if (Double.doubleToLongBits(latitude) != Double.doubleToLongBits(other.latitude))
+			return false;
+		if (Double.doubleToLongBits(longitude) != Double.doubleToLongBits(other.longitude))
+			return false;
 		if (membre == null) {
 			if (other.membre != null)
 				return false;
@@ -252,25 +358,25 @@ public class Abonnement extends AbstractEntity {
 			return false;
 		if (nombreVue != other.nombreVue)
 			return false;
-		if (pathPhoto == null) {
-			if (other.pathPhoto != null)
-				return false;
-		} else if (!pathPhoto.equals(other.pathPhoto))
+		if (utlisateurBanni != other.utlisateurBanni)
 			return false;
-		if (pathPhotoCouveture == null) {
-			if (other.pathPhotoCouveture != null)
-				return false;
-		} else if (!pathPhotoCouveture.equals(other.pathPhotoCouveture))
+		if (utlisateurEnAttente != other.utlisateurEnAttente)
+			return false;
+		if (utlisateurSuspendu != other.utlisateurSuspendu)
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Abonnement [description=" + description + ", pathPhoto=" + pathPhoto + ", pathPhotoCouveture="
-				+ pathPhotoCouveture + ", membre=" + membre + ", block=" + block + ", nombreVue=" + nombreVue
-				+ ", dateExpire=" + dateExpire + ", active=" + active + ", abonneSpecial=" + abonneSpecial
-				+ ", dategratuite=" + dategratuite + "]";
+		return "Abonnement [description=" + description + ", dateAbonnement=" + dateAbonnement + ", membre=" + membre
+				+ ", espace=" + espace + ", nombreVue=" + nombreVue + ", dateExpire=" + dateExpire
+				+ ", dateExpireAbonneSpecial=" + dateExpireAbonneSpecial + ", active=" + active + ", abonneSpecial="
+				+ abonneSpecial + ", free=" + free + ", dategratuite=" + dategratuite + ", utlisateurBanni="
+				+ utlisateurBanni + ", utlisateurSuspendu=" + utlisateurSuspendu + ", utlisateurEnAttente="
+				+ utlisateurEnAttente + ", idEspace=" + idEspace + ", idPersone=" + idPersone + ", longitude="
+				+ longitude + ", latitude=" + latitude + "]";
 	}
 
+	
 }

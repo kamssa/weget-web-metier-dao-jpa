@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.commande;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;

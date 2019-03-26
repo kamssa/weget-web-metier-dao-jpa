@@ -22,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ci.weget.web.entites.abonnement.Experiences;
 import ci.weget.web.entites.competences.DocCompetence;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.IDocCompetenceMetier;
@@ -141,6 +143,36 @@ public class DocCompetenceController {
 		return jsonMapper.writeValueAsString(reponse);
 
 	}
+	@DeleteMapping("/documentCompetence/{id}")
+	public String supprimer(@PathVariable("id") Long id) throws JsonProcessingException {
+
+		Reponse<Boolean> reponse = null;
+		boolean erreur = false;
+		DocCompetence b = null;
+		if (!erreur) {
+			Reponse<DocCompetence> responseSup = getDocCompetenceById(id);
+			b = responseSup.getBody();
+			if (responseSup.getStatus() != 0) {
+				reponse = new Reponse<>(responseSup.getStatus(), responseSup.getMessages(), null);
+				erreur = true;
+
+			}
+		}
+		if (!erreur) {
+			// suppression
+			try {
+
+				List<String> messages = new ArrayList<>();
+				messages.add(String.format(" %s a ete supprime", b.getId()));
+
+				reponse = new Reponse<Boolean>(0, messages, docCompetenceMetier.supprimer(id));
+
+			} catch (RuntimeException e1) {
+				reponse = new Reponse<>(3, Static.getErreursForException(e1), null);
+			}
+		}
+		return jsonMapper.writeValueAsString(reponse);
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// enregistrer les photos d'une gallery dans la base
@@ -150,16 +182,17 @@ public class DocCompetenceController {
 			throws Exception {
 		Reponse<DocCompetence> reponse = null;
 		Reponse<DocCompetence> reponseParId;
+		List<DocCompetence>docs=docCompetenceMetier.findAllDocumentsParIdAbonne(id);
 		// recuperer le libelle à partir du nom de la photo
 		String titre = file.getOriginalFilename();
 		reponseParId = getDocCompetenceById(id);
 		DocCompetence d = reponseParId.getBody();
 		System.out.println(d);
 
-		String path = "http://wegetback:8080/getDocCompetence/" + d.getVersion() + "/" + d.getId() + "/" + titre;
+		String path = "http://wegetback:8080/getDocCompetence/" + id + "/" + titre;
 		System.out.println(path);
 		if (reponseParId.getStatus() == 0) {
-			String dossier = togetImage + "/" + "DocCompetence" + "/" + d.getId() + "/";
+			String dossier = togetImage + "/" + "DocCompetence" + "/" + id + "/";
 			File rep = new File(dossier);
 
 			if (!file.isEmpty()) {
@@ -192,8 +225,8 @@ public class DocCompetenceController {
 	// recuperer les images de la gallery
 	//@PreAuthorize("hasRole('ROLE_MEMBRE')")
 	//@RolesAllowed("ROLE_MEMBRE")
-	@GetMapping(value = "/getDocCompetence/{version}/{id}/{titre}", produces = MediaType.IMAGE_JPEG_VALUE)
-	public ResponseEntity<Resource> getDocsCompetence(@PathVariable String version, @PathVariable Long id,
+	@GetMapping(value = "/getDocCompetence/{id}/{titre}", produces = MediaType.IMAGE_JPEG_VALUE)
+	public ResponseEntity<Resource> getDocsCompetence(@PathVariable Long id,
 			@PathVariable String titre, HttpServletRequest request) throws FileNotFoundException, IOException {
 		// ResponseEntity<Resource> reponse;
 		String dossier = togetImage + "/" + "DocCompetence" + "/" + id + "/" + titre;

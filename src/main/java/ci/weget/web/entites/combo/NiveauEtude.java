@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_NiveauEtude")
+@Table(name = "T_ComboNiveauEtude")
 public class NiveauEtude  extends AbstractEntity{
 
 	

@@ -1,6 +1,5 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.espace;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -8,7 +7,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import ci.weget.web.entites.publicite.Publicite;
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_Tarif")
@@ -18,44 +17,64 @@ public class Tarif extends AbstractEntity {
 
 	private String titre;
 	private double prix;
+	private double prixSpecial;
 	private int dureeTarif;
+	private int dureeSpecial;
 	private String typeDuree;
 	private boolean free;
-	private boolean abonneSpecial;
 	@Column(columnDefinition="TEXT")
 	private String description;
 
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_Block", insertable = false, updatable = false)
-	private Block block;
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "id_Espace")
+	private Espace espace;
 
-	@Column(name = "id_Block")
-	private long idBlock;
+	@Column(name = "id_Espace", insertable = false, updatable = false)
+	private long idEspace;
 	
 	public Tarif() {
 		super();
 
 	}
 
-	public Tarif(String titre, double prix, int dureeTarif, String typeDuree, String description, Block block,
-			long idBlock) {
+	
+	public Tarif(String titre, double prix, double prixSpecial, int dureeTarif, int dureeSpecial, String typeDuree,
+			boolean free, String description, Espace espace, long idEspace) {
 		super();
 		this.titre = titre;
 		this.prix = prix;
+		this.prixSpecial = prixSpecial;
 		this.dureeTarif = dureeTarif;
+		this.dureeSpecial = dureeSpecial;
 		this.typeDuree = typeDuree;
+		this.free = free;
 		this.description = description;
-		this.block = block;
-		this.idBlock = idBlock;
-		
+		this.espace = espace;
+		this.idEspace = idEspace;
 	}
 
-	public boolean isAbonneSpecial() {
-		return abonneSpecial;
+
+	public Espace getEspace() {
+		return espace;
 	}
 
-	public void setAbonneSpecial(boolean abonneSpecial) {
-		this.abonneSpecial = abonneSpecial;
+
+	public void setEspace(Espace espace) {
+		this.espace = espace;
+	}
+
+
+	public long getIdEspace() {
+		return idEspace;
+	}
+
+
+	public double getPrixSpecial() {
+		return prixSpecial;
+	}
+
+	public void setPrixSpecial(double prixSpecial) {
+		this.prixSpecial = prixSpecial;
 	}
 
 	public String getTitre() {
@@ -74,9 +93,7 @@ public class Tarif extends AbstractEntity {
 		this.prix = prix;
 	}
 
-	public void setIdBlock(long idBlock) {
-		this.idBlock = idBlock;
-	}
+	
 
 	public String getDescription() {
 		return description;
@@ -84,18 +101,6 @@ public class Tarif extends AbstractEntity {
 
 	public void setDescription(String description) {
 		this.description = description;
-	}
-
-	public Block getBlock() {
-		return block;
-	}
-
-	public void setBlock(Block block) {
-		this.block = block;
-	}
-
-	public long getIdBlock() {
-		return idBlock;
 	}
 
 	
@@ -125,23 +130,36 @@ public class Tarif extends AbstractEntity {
 		this.free = free;
 	}
 
+	
+	public int getDureeSpecial() {
+		return dureeSpecial;
+	}
+
+	public void setDureeSpecial(int dureeSpecial) {
+		this.dureeSpecial = dureeSpecial;
+	}
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + (abonneSpecial ? 1231 : 1237);
-		result = prime * result + ((block == null) ? 0 : block.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + dureeSpecial;
 		result = prime * result + dureeTarif;
+		result = prime * result + ((espace == null) ? 0 : espace.hashCode());
 		result = prime * result + (free ? 1231 : 1237);
-		result = prime * result + (int) (idBlock ^ (idBlock >>> 32));
+		result = prime * result + (int) (idEspace ^ (idEspace >>> 32));
 		long temp;
 		temp = Double.doubleToLongBits(prix);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(prixSpecial);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		result = prime * result + ((titre == null) ? 0 : titre.hashCode());
 		result = prime * result + ((typeDuree == null) ? 0 : typeDuree.hashCode());
 		return result;
 	}
+
 
 	@Override
 	public boolean equals(Object obj) {
@@ -152,25 +170,27 @@ public class Tarif extends AbstractEntity {
 		if (getClass() != obj.getClass())
 			return false;
 		Tarif other = (Tarif) obj;
-		if (abonneSpecial != other.abonneSpecial)
-			return false;
-		if (block == null) {
-			if (other.block != null)
-				return false;
-		} else if (!block.equals(other.block))
-			return false;
 		if (description == null) {
 			if (other.description != null)
 				return false;
 		} else if (!description.equals(other.description))
 			return false;
+		if (dureeSpecial != other.dureeSpecial)
+			return false;
 		if (dureeTarif != other.dureeTarif)
+			return false;
+		if (espace == null) {
+			if (other.espace != null)
+				return false;
+		} else if (!espace.equals(other.espace))
 			return false;
 		if (free != other.free)
 			return false;
-		if (idBlock != other.idBlock)
+		if (idEspace != other.idEspace)
 			return false;
 		if (Double.doubleToLongBits(prix) != Double.doubleToLongBits(other.prix))
+			return false;
+		if (Double.doubleToLongBits(prixSpecial) != Double.doubleToLongBits(other.prixSpecial))
 			return false;
 		if (titre == null) {
 			if (other.titre != null)
@@ -185,12 +205,12 @@ public class Tarif extends AbstractEntity {
 		return true;
 	}
 
+
 	@Override
 	public String toString() {
-		return "Tarif [titre=" + titre + ", prix=" + prix + ", dureeTarif=" + dureeTarif + ", typeDuree=" + typeDuree
-				+ ", free=" + free + ", abonneSpecial=" + abonneSpecial + ", description=" + description + ", block="
-				+ block + ", idBlock=" + idBlock + "]";
+		return "Tarif [titre=" + titre + ", prix=" + prix + ", prixSpecial=" + prixSpecial + ", dureeTarif="
+				+ dureeTarif + ", dureeSpecial=" + dureeSpecial + ", typeDuree=" + typeDuree + ", free=" + free
+				+ ", description=" + description + ", espace=" + espace + ", idEspace=" + idEspace + "]";
 	}
 
-	
 }

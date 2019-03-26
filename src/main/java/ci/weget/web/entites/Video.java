@@ -13,7 +13,7 @@ public class Video  extends AbstractEntity{
 	private String pathVideo;
 	public Video() {
 		super();
-		// TODO Auto-generated constructor stub
+		
 	}
 	public Video(String titre, String pathVideo) {
 		super();

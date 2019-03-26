@@ -1,15 +1,17 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ci.weget.web.dao.RoleRepository;
-import ci.weget.web.entites.Role;
-import ci.weget.web.entites.RoleName;
+import ci.weget.web.entites.personne.Role;
+import ci.weget.web.entites.personne.RoleName;
 import ci.weget.web.exception.InvalideTogetException;
-import ci.weget.web.security.AppRoles;
+
 
 @Service
 public class RoleMetierImpl implements IRoleMetier{
@@ -24,27 +26,44 @@ public class RoleMetierImpl implements IRoleMetier{
 	}
 
 	@Override
-	public Role modifier(Role entity) throws InvalideTogetException {
-		// TODO Auto-generated method stub
-		return roleRepository.save(entity);
+	public Role modifier(Role modif) throws InvalideTogetException {
+		Optional<Role> role = roleRepository.findById(modif.getId());
+
+		if (role.isPresent()) {
+			
+			if (role.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+		
+		return roleRepository.save(modif);
 	}
 
 	@Override
 	public List<Role> findAll() {
-		// TODO Auto-generated method stub
-		return roleRepository.findAll();
+		List<Role> rolesTrouves = null;
+		// return abonnementRepository.findAbonnementParIdBlock(id);
+		List<Role> roles = roleRepository.findAll();
+
+		rolesTrouves = roles.stream()
+				
+				.collect(Collectors.toList());
+
+		return rolesTrouves;
 	}
 
 	@Override
 	public Role findById(Long id) {
 		// TODO Auto-generated method stub
-		return null;
+		return roleRepository.findById(id).get();
 	}
 
 	@Override
 	public boolean supprimer(Long id) {
-		// TODO Auto-generated method stub
-		return false;
+		roleRepository.deleteById(id);
+		return true;
 	}
 
 	@Override
@@ -60,9 +79,9 @@ public class RoleMetierImpl implements IRoleMetier{
 	}
 
 	@Override
-	public Role getUserRoleByNom(RoleName name) {
+	public Role findByRoleName(RoleName name) {
 		// TODO Auto-generated method stub
-		return roleRepository.getUserRoleParName(RoleName.ROLE_MEMBRE);
+		return roleRepository.findByName(name).get();
 	}
 	
 }

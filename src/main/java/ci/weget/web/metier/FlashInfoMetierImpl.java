@@ -1,12 +1,13 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ci.weget.web.dao.FlashInfoRepository;
-import ci.weget.web.entites.FlashInfo;
+import ci.weget.web.entites.ecole.FlashInfo;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
@@ -15,14 +16,25 @@ public class FlashInfoMetierImpl implements IFlashInfoMetier {
 private FlashInfoRepository flashInfoRepository;
 	@Override
 	public FlashInfo creer(FlashInfo entity) throws InvalideTogetException {
-		// TODO Auto-generated method stub
 		return flashInfoRepository.save(entity);
+		
 	}
 
 	@Override
-	public FlashInfo modifier(FlashInfo entity) throws InvalideTogetException {
+	public FlashInfo modifier(FlashInfo modif) throws InvalideTogetException {
 		
-		return flashInfoRepository.save(entity);
+		Optional<FlashInfo> flashInfo = flashInfoRepository.findById(modif.getId());
+
+		if (flashInfo.isPresent()) {
+			
+			if (flashInfo.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+		
+		return flashInfoRepository.save(modif);
 	}
 
 	@Override
@@ -34,7 +46,7 @@ private FlashInfoRepository flashInfoRepository;
 	@Override
 	public FlashInfo findById(Long id) {
 		
-		return flashInfoRepository.getByid(id);
+		return flashInfoRepository.findById(id).get();
 	}
 
 	@Override
@@ -52,14 +64,14 @@ private FlashInfoRepository flashInfoRepository;
 
 	@Override
 	public boolean existe(Long id) {
-		// TODO Auto-generated method stub
-		return false;
+		flashInfoRepository.existsById(id);
+		return true;
 	}
 
 	@Override
 	public List<FlashInfo> findAllFlashInfoParIdSousBlock(Long id) {
 		
-		return flashInfoRepository.findAllFlashInfoParIdDetailAbonnement(id);
+		return flashInfoRepository.findAllFlashInfoByEcole(id);
 	}
 
 }

@@ -9,8 +9,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import ci.weget.web.entites.AbstractEntity;
-import ci.weget.web.entites.Entreprise;
-import ci.weget.web.entites.Personne;
+import ci.weget.web.entites.personne.Entreprise;
+import ci.weget.web.entites.personne.Personne;
 
 @Entity
 @Table(name = "T_AbonnesPub")

@@ -1,10 +1,10 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.personne;
 
-/**
- * Created by rajeevkumarsingh on 07/12/17.
- */
+
 public enum  RoleName {
-	ROLE_MEMBRE,
-    ROLE_ABONNE,
-    ROLE_ADMIN
+	MEMBRE,
+    ABONNE,
+    ADMIN,
+    ADMINSUP
+    
 }

@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
-import ci.weget.web.entites.Chiffre;
-import ci.weget.web.entites.Temoignage;
+import ci.weget.web.entites.ecole.Chiffre;
+import ci.weget.web.entites.ecole.Temoignage;
 
+@Repository
 public interface ChiffreRepository extends JpaRepository<Chiffre, Long> {
 	// ramener un temoignage a partir de son identifiant
 	@Query("select c from Chiffre c where c.id=?1")

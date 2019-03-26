@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.abonnement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +12,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_CvPersonne")
@@ -32,21 +36,17 @@ public class CvPersonne extends AbstractEntity {
 	@Column(columnDefinition="TEXT")
 	private String description;
 	private String pathCv;
-	@OneToMany(cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_Experience")
-	private List<Experiences> experience;
-	@OneToMany(cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_Cursus")
-	private List<CursusColaire> cursus;
 	@ElementCollection
 	private List<String> dureeContrat = new ArrayList<>();
     @ElementCollection
 	private List<String> periodeContrat = new ArrayList<>();
 	@ElementCollection
 	private List<String> disponibilite = new ArrayList<>();
-	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Abonnement")
 	private Abonnement abonnement;
+	@Column(name = "id_Abonnement", insertable = false, updatable = false)
+	private long idAbonnement;
 	public CvPersonne() {
 		super();
 
@@ -58,6 +58,11 @@ public class CvPersonne extends AbstractEntity {
 		this.specialite = specialite;
 		this.anneExperience = anneExperience;
 		this.description = description;
+	}
+   
+
+	public long getIdAbonnement() {
+		return idAbonnement;
 	}
 
 	public String getDiplome() {
@@ -139,22 +144,7 @@ public class CvPersonne extends AbstractEntity {
 	public void setPathCv(String pathCv) {
 		this.pathCv = pathCv;
 	}
-
-	public List<Experiences> getExperience() {
-		return experience;
-	}
-
-	public void setExperience(List<Experiences> experience) {
-		this.experience = experience;
-	}
-
-	public List<CursusColaire> getCursus() {
-		return cursus;
-	}
-
-	public void setCursus(List<CursusColaire> cursus) {
-		this.cursus = cursus;
-	}
+	
 
 	public List<String> getDureeContrat() {
 		return dureeContrat;

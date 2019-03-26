@@ -1,125 +1,92 @@
 package ci.weget.web.metier;
 
-import java.text.ParseException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.auth.UserRecord.CreateRequest;
 import com.google.firebase.auth.UserRecord.UpdateRequest;
 
-import ci.weget.web.dao.AbonnementRepository;
-import ci.weget.web.dao.PanierRepository;
 import ci.weget.web.dao.PersonnesRepository;
-import ci.weget.web.dao.RoleRepository;
 import ci.weget.web.dao.VerificationTokenRepository;
-import ci.weget.web.entites.Adresse;
-import ci.weget.web.entites.Membre;
-import ci.weget.web.entites.Personne;
-import ci.weget.web.entites.VerificationToken;
+import ci.weget.web.entites.personne.Membre;
+import ci.weget.web.entites.personne.Personne;
+import ci.weget.web.entites.personne.VerificationToken;
 import ci.weget.web.exception.InvalideTogetException;
-import ci.weget.web.modeles.CreerAbonne;
+import ci.weget.web.modeles.PathImage;
 
 @Service
-@Transactional
 public class MembreMetierImpl implements IMembreMetier {
 
 	public static final String TOKEN_INVALID = "INVALID";
 	public static final String TOKEN_EXPIRED = "EXPIRED";
 	public static final String TOKEN_VALID = "VALID";
-	static final String USER_NOT_FOUND_ERROR = "user-not-found";
-	static final String INTERNAL_ERROR = "internal-error";
-	static final String ID_TOKEN_REVOKED_ERROR = "id-token-revoked";
-	static final String SESSION_COOKIE_REVOKED_ERROR = "session-cookie-revoked";
-
+	
+	
 	@Autowired
 	private PersonnesRepository personnesRepository;
 
 	@Autowired
 	PasswordEncoder passwordEncoder;
+
 	@Autowired
 	private VerificationTokenRepository tokenRepository;
 
-	@Autowired
-	private PanierRepository panierRepository;
-	@Autowired
-	private AbonnementRepository abonnementRepository;
-	@Autowired
-	private RoleRepository roleRepository;
-	@Autowired
-	private CreerAbonne creerAbonne;
+	
+////////////chemin ou sera sauvegarder les photos
+////////////////////////////////////////////////////
+	@Value("${dir.images}")
+	private String togetImage;
 
-	// verifier si un utilisateur existe sur firebase
-	private UserRecord verifierUser(Personne personne) {
-		UserRecord user = null;
-		try {
-			user = FirebaseAuth.getInstance().getUserByEmail(personne.getLogin());
-		} catch (FirebaseAuthException e) {
-
-			e.getMessage();
-		}
-		return user;
-
-	}
 
 	/////// creer un utilisateur sur firebase///////////////////////////////////////
+	public UserRecord createUser(Personne personne) throws FirebaseAuthException {
+		CreateRequest request = new CreateRequest().setEmail(personne.getLogin()).setPassword(personne.getPassword());
 
-	
-	public UserRecord createUser(Personne personne) throws FirebaseException, InterruptedException, ExecutionException {
+		com.google.firebase.auth.UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
 
-		UserRecord userRecord = null;
-		//userRecord = (ApiFuture<UserRecord>) FirebaseAuth.getInstance().getUserByEmail(personne.getLogin());
-		
-
-		Optional<Personne> p = personnesRepository.findByLogin(personne.getLogin());
-		//System.out.println("Successfully   userRecord: " + userRecord);
-		System.out.println("Successfully   p: " + p);
-
-		if (!p.isPresent()) {
-			CreateRequest request = new CreateRequest().setEmail(personne.getLogin())
-					.setPassword(personne.getPassword());
-
-			userRecord = FirebaseAuth.getInstance().createUser(request);
-			System.out.println("Successfully created new user: " + userRecord.getUid());
-
-			System.out.println("Successfully created new user: " + userRecord.getUid());
-		}
+		System.out.println("utilisateur creer avec success: " + userRecord.getUid());
+		System.out.println(
+				"utilisateur creer avec success: " + FirebaseAuth.getInstance().getUserAsync(userRecord.getUid()));
 
 		return userRecord;
 
 	}
 
+//  mettre a jour un utilisateur sur firebase
 	@Override
 	public UserRecord updateUser(Personne personne) throws Exception {
 
 		UpdateRequest request = new UpdateRequest(personne.getLogin()).setEmail(personne.getLogin())
-				// .setEmailVerified(personne.getAdresse().getEmail())
 				.setPassword(personne.getPassword());
-		UserRecord userRecord = FirebaseAuth.getInstance().updateUser(request);
+		com.google.firebase.auth.UserRecord userRecord = FirebaseAuth.getInstance().updateUser(request);
 
 		return userRecord;
 	}
 
-	@Override
-	public Personne findById(final Long id) {
-
-		return personnesRepository.getPersonneByid(id);
-	}
-
+	// creer un utilisateur dans la base
 	@Override
 	public Personne creer(Personne p) throws InvalideTogetException {
-
+		if ((p.getLogin().equals(null)) || (p.getLogin() == "")) {
+			throw new InvalideTogetException("Le login ne peut etre null");
+		}
 		if (!p.getPassword().equals(p.getRepassword())) {
 			throw new InvalideTogetException("Vous devez remplir des mots de passe identique");
 		}
@@ -130,65 +97,86 @@ public class MembreMetierImpl implements IMembreMetier {
 		if (pers.isPresent()) {
 			throw new InvalideTogetException("ce login est deja utilise");
 		}
-		Adresse adresse = new Adresse();
-		adresse.setLatitude(0);
-		adresse.setLongitude(0);
-		p.setAdresse(adresse);
+
+		p.setCode(System.currentTimeMillis());
 		p.setPassword(passwordEncoder.encode(p.getPassword()));
 		p.setRepassword(passwordEncoder.encode(p.getRepassword()));
 		return personnesRepository.save(p);
 	}
 
+// modifier un utilisateur dans la base
 	@Override
-	@Transactional
 	public Personne modifier(Personne modif) throws InvalideTogetException {
 
-		if (modif != null) {
-			Optional<Personne> pers = personnesRepository.findByLogin(modif.getLogin());
-			if (pers.get().getVersion() != modif.getVersion()) {
+		Optional<Personne> p = personnesRepository.findById(modif.getId());
+		if (p.isPresent()) {
+
+			if (p.get().getVersion() != modif.getVersion()) {
 				throw new InvalideTogetException("ce libelle a deja ete modifier");
 			}
 
-		} else {
+		} else
 			throw new InvalideTogetException("modif est un objet null");
-		}
-		Optional<Personne> pers1 = personnesRepository.findByLogin(modif.getLogin());
-		String hshPW = pers1.get().getPassword();
-		 String hshRPW = pers1.get().getRepassword();
-		modif.setPassword(hshPW);
-		modif.setRepassword(hshRPW);
-	    return personnesRepository.save(modif);
+
+		modif.setPassword(p.get().getPassword());
+		modif.setRepassword(p.get().getRepassword());
+		modif.setActived(true);
+		return personnesRepository.save(modif);
 	}
 
+	// reset le password si on l'a oublie
 	@Override
 	public Personne modifierPassword(String login, String password, String repassword) throws InvalideTogetException {
-
+		Personne personne = null;
 		Optional<Personne> pers1 = personnesRepository.findByLogin(login);
-		String hshPW = pers1.get().getPassword();
-		pers1.get().setPassword(passwordEncoder.encode(password));
-		pers1.get().setRepassword(passwordEncoder.encode(repassword));
-		return personnesRepository.save(pers1.get());
+		Personne p = pers1.get();
+		if (pers1.isPresent()) {
+			if (p.isActived() == true) {
+				p.setPassword(passwordEncoder.encode(password));
+				p.setRepassword(passwordEncoder.encode(repassword));
+				new UpdateRequest(p.getLogin()).setEmail(p.getLogin()).setPassword(password);
+			}
+
+			personne = personnesRepository.save(p);
+		}
+
+		return personne;
 	}
 
+	// recupere un utlisateur a partir de son login
 	@Override
-	public Personne findByLogin(String login) {
+	public Personne findByLogin(String login) throws InvalideTogetException {
+		Personne p = null;
+		p = personnesRepository.findByLogin(login).get();
 
-		return personnesRepository.findByMembreLogin(login);
+		if (p.isActived() == false) {
+			throw new RuntimeException("Vous n'etes pas active");
+		}
+		return p;
 	}
 
-	@Override
-	public List<Personne> findAll() {
-
-		return personnesRepository.findAllMembres();
-	}
-
+// supprimer un utilisateur dans la base et sur firebase
 	@Override
 	public boolean supprimer(Long id) {
-    personnesRepository.deleteById(id);
-		
+		Personne p = personnesRepository.findById(id).get();
+		UserRecord userRecord = null;
+
+		try {
+			userRecord = FirebaseAuth.getInstance().getUserByEmailAsync(p.getLogin()).get();
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}
+		try {
+			FirebaseAuth.getInstance().deleteUser(userRecord.getUid());
+		} catch (FirebaseAuthException e) {
+			e.printStackTrace();
+		}
+		personnesRepository.deleteById(id);
+
 		return true;
 	}
 
+// supprimer une liste d'utilisateur
 	@Override
 	public boolean supprimer(List<Personne> entites) {
 
@@ -196,18 +184,24 @@ public class MembreMetierImpl implements IMembreMetier {
 		return true;
 	}
 
+	// verifier si un utilisateur existe
 	@Override
 	public boolean existe(Long id) {
 
 		return personnesRepository.existsById(id);
 	}
+	// ramener un membre a partir de sa cle de verification
 
 	@Override
 	public Membre getMembre(String verificationToken) {
 		Membre membre = tokenRepository.findByToken(verificationToken).getMembre();
+		if (membre.isActived() == false) {
+			throw new RuntimeException("vous etes desactive");
+		}
 		return membre;
 	}
 
+// creer une cle de verification pour un membre
 	@Override
 	public void createVerificationToken(Membre membre, String token) {
 		VerificationToken myToken = new VerificationToken(token, membre);
@@ -215,6 +209,7 @@ public class MembreMetierImpl implements IMembreMetier {
 
 	}
 
+	// verifier la date d'expiration de la cle du membre
 	@Override
 	public String validateVerificationToken(String token) {
 		VerificationToken verificationToken = tokenRepository.findByToken(token);
@@ -227,7 +222,7 @@ public class MembreMetierImpl implements IMembreMetier {
 
 			Membre user = verificationToken.getMembre();
 
-			user.setEnabled(true);
+			// user.setEnabled(true);
 
 			personnesRepository.save(user);
 
@@ -235,14 +230,7 @@ public class MembreMetierImpl implements IMembreMetier {
 		return TOKEN_VALID;
 	}
 
-	private boolean emailExist(String login) {
-		Optional<Personne> user = personnesRepository.findByLogin(login);
-		if (user.get().getLogin() != null) {
-			return true;
-		}
-		return false;
-	}
-
+// generer une nouvelle cle pour un membre
 	@Override
 	public VerificationToken generateNewVerificationToken(String existingVerificationToken) {
 
@@ -252,20 +240,22 @@ public class MembreMetierImpl implements IMembreMetier {
 		return vToken;
 	}
 
+// recupere une cle par id du membre
 	@Override
 	public VerificationToken getVericationTokenParMembre(Long id) {
 
 		return tokenRepository.rechercherByMembre(id);
 	}
 
+// ramener les membre par type et actifs
 	@Override
-	public List<Personne> personneALL(String type) {
+	public List<Personne> findAll() {
 		List<Personne> pers = personnesRepository.findAll();
-
-		List<Personne> personne = pers.stream().filter(p -> p.getType().equals(type)).collect(Collectors.toList());
-
+		List<Personne> personne = pers.stream().filter(p -> p.getType().equals("ME")).collect(Collectors.toList());
 		return personne;
+
 	}
+	// modifier la date d'expiration de la cle
 
 	@Override
 	public VerificationToken modifDateExpire(Long id) {
@@ -273,15 +263,164 @@ public class MembreMetierImpl implements IMembreMetier {
 		verificationToken.setExpiryDate(LocalDateTime.now().plusDays(1));
 		return tokenRepository.save(verificationToken);
 	}
+	// creer un abonne
 
+	
+// modifier le password du compte
 	@Override
-	public boolean creerAbonne(Personne personne) throws InvalideTogetException {
+	public Personne changerPasswordCompte(Long id, String password, String nouveauPassword, String confirmePassword)
+			throws InvalideTogetException {
+		com.google.firebase.auth.UserRecord userRecord = null;
+		Personne personne = personnesRepository.findById(id).get();
+
+		boolean b = matches(id, password);
+		System.out.println(" retour des mots de passe comparrer" + b);
+		if (b == true) {
+			if (!nouveauPassword.equals(confirmePassword)) {
+				throw new RuntimeException("Votre mot de passe ne correspond pas à la confirmation");
+			}
+			personne.setPassword(passwordEncoder.encode(nouveauPassword));
+			personne.setRepassword(passwordEncoder.encode(confirmePassword));
+
+		} else {
+			throw new RuntimeException("Vous n'êtes pas autorisé!");
+		}
+		Personne pers = personnesRepository.save(personne);
 		try {
-			creerAbonne.creerUnAbonne(personne);
-		} catch (ParseException e) {
+			userRecord = FirebaseAuth.getInstance().getUserByEmailAsync(pers.getLogin()).get();
+			System.out
+					.println("recuperer userRecord***************" + userRecord.getUid() + "/" + userRecord.getEmail());
+
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}
+		UpdateRequest request = new UpdateRequest(userRecord.getUid()).setPassword(nouveauPassword);
+		try {
+			userRecord = FirebaseAuth.getInstance().updateUser(request);
+		} catch (FirebaseAuthException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println("Successfully updated user: " + userRecord.getUid());
+
+		return pers;
+	}
+
+// verifier les passwords encode 
+	@Override
+	public boolean matches(Long id, String oldPassword) {
+		PasswordEncoder encoder = new BCryptPasswordEncoder();
+		Personne personne = personnesRepository.findById(id).get();
+		return encoder.matches(oldPassword, personne.getPassword());
+	}
+
+// mis a jour du membre  sur firebase 
+	@Override
+	public UserRecord updateUser(String login, String password) throws Exception {
+		UpdateRequest request = new UpdateRequest(login).setEmail(login).setPassword(password);
+		com.google.firebase.auth.UserRecord userRecord = FirebaseAuth.getInstance().updateUser(request);
+
+		return userRecord;
+	}
+
+	@Override
+	public Personne findById(Long id) {
+		return personnesRepository.findById(id).get();
+	}
+
+	@Override
+	public Boolean existsByLogin(String login) {
+		personnesRepository.existsByLogin(login);
 		return true;
 	}
+
+	@Override
+	public Personne createImageMembre(MultipartFile file, Long id) throws IllegalStateException, IOException {
+		Personne p = null;
+		// recuperer le libelle à partir du nom de la photo
+		String libelle = file.getOriginalFilename();
+		String libelleSEspace = libelle.trim();
+		String libelleS = libelleSEspace.replaceAll("\\s", "");
+		p = personnesRepository.findById(id).get();
+		System.out.println(p);
+
+		String path = PathImage.getLienRetourImageMembre() + p.getVersion() + "/"+id+"/" + libelleS;
+		System.out.println(path);
+
+		String dossier = togetImage + "/" + PathImage.getLienImageMembre() + "/"+id+"/";
+		File rep = new File(dossier);
+
+		if (!file.isEmpty()) {
+			if (!rep.exists() && !rep.isDirectory()) {
+				rep.mkdir();
+			}
+		}
+		try {
+			// enregistrer le chemin dans la photo
+			p.setPathPhoto(path);
+			System.out.println(path);
+			file.transferTo(new File(dossier + libelleS));
+
+		} catch (Exception e) {
+
+			throw new RuntimeException("Operation reussi");
+		}
+
+		return p;
+
+	}
+
+	@Override
+	public Personne createImageCouvertureMembre(MultipartFile file, Long id) throws IllegalStateException, IOException {
+		// recuperer le libelle à partir du nom de la photo
+		Personne p = null;
+		String libelle = file.getOriginalFilename();
+		String libelleSEspace = libelle.trim();
+		String libelleS = libelleSEspace.replaceAll("\\s", "");
+		p = personnesRepository.findById(id).get();
+		System.out.println(p);
+
+		String path = PathImage.getLienRetourImageCouvertureMembre() + p.getVersion() + "/" + id+ "/" + libelleS;
+		System.out.println(path);
+
+		String dossier = togetImage + "/" + PathImage.getLienImageCouverureMembre() +"/"+id+"/";
+		File rep = new File(dossier);
+
+		if (!file.isEmpty()) {
+			if (!rep.exists() && !rep.isDirectory()) {
+				rep.mkdir();
+			}
+		}
+		try {
+			// enregistrer le chemin dans la photo
+			p.setPathPhotoCouveture(path);
+			System.out.println(path);
+			file.transferTo(new File(dossier + libelleS));
+            personnesRepository.save(p);
+		} catch (Exception e) {
+
+			throw new RuntimeException("Operation reussi");
+		}
+		return p;
+	}
+
+	@Override
+	public byte[] getImageMembre(Long version, Long id,String libelle) throws FileNotFoundException, IOException {
+		String dossier = togetImage + "/" + PathImage.getLienImageMembre() +"/"+id+"/";
+		File f = new File(dossier + libelle);
+		byte[] img = IOUtils.toByteArray(new FileInputStream(f));
+
+		return img;
+	}
+
+	@Override
+	public byte[] getImageCouvertureMembre(Long version, Long id,String libelle) throws FileNotFoundException, IOException {
+		String dossier = togetImage + "/" + PathImage.getLienImageCouverureMembre() +"/"+id+"/";
+		File f = new File(dossier + libelle);
+		byte[] img = IOUtils.toByteArray(new FileInputStream(f));
+
+		return img;
+	}
+
+	
 }

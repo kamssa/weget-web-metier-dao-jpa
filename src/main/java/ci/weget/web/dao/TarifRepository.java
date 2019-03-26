@@ -4,20 +4,13 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
-import ci.weget.web.entites.Tarif;
+import ci.weget.web.entites.espace.Tarif;
 
+@Repository
 public interface TarifRepository extends JpaRepository<Tarif, Long> {
-	// liste des tarif d'un block identifie par son id
-	@Query("select t from Tarif t  left join fetch t.block b where b.id=?1")
-	List<Tarif> getTarifParBlock(long id);
-
-	// liste des tarif d'un block identifie par son id
-	@Query("select t from Tarif t  left join fetch t.block b where t.id=?1")
-	Long getidBlock(long id);
-
-	// le block du tarif par son id
-	@Query("select t from Tarif t where t.id=?1")
-	Tarif getTarifParId(Long id);
-
+	// liste des tarif d'un espace identifie par son id
+	@Query("select t from Tarif t  where t.espace.id=?1")
+	List<Tarif> getTarifByEspace(long id);
 }

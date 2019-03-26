@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_Domaine")
+@Table(name = "T_ComboDomaine")
 public class Domaine extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;

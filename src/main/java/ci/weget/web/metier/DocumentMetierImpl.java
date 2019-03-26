@@ -1,12 +1,14 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ci.weget.web.dao.DocumentRepository;
-import ci.weget.web.entites.Document;
+import ci.weget.web.entites.abonnement.Document;
+import ci.weget.web.entites.competences.DocCompetence;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
@@ -21,9 +23,21 @@ public class DocumentMetierImpl implements IDocumentMetier {
 	}
 
 	@Override
-	public Document modifier(Document entity) throws InvalideTogetException {
+	public Document modifier(Document modif) throws InvalideTogetException {
 		
-		return documentRepository.save(entity);
+		
+		Optional<Document> document = documentRepository.findById(modif.getId());
+
+		if (modif != null) {
+			
+			if (document.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+		
+		return documentRepository.save(modif);
 	}
 
 	@Override
@@ -35,7 +49,7 @@ public class DocumentMetierImpl implements IDocumentMetier {
 	@Override
 	public Document findById(Long id) {
 		// TODO Auto-generated method stub
-		return documentRepository.cherchereDocumentParId(id);
+		return null;
 	}
 
 	@Override
@@ -62,10 +76,6 @@ public class DocumentMetierImpl implements IDocumentMetier {
 		return documentRepository.cherchereDocumentParLibelle(titre);
 	}
 
-	@Override
-	public List<Document> findDocumentParIdDetailAbonnement(Long id) {
-		
-		return documentRepository.findDocumentParIdDetailAbonnement(id);
-	}
+	
 
 }

@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.ecole;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_FORMATION")
@@ -34,9 +36,9 @@ public class Formation extends AbstractEntity {
 	@OneToMany(cascade = CascadeType.ALL,orphanRemoval = true)
 	@JoinColumn(name = "id_Formatiom")
 	private List<Programme> programme = new ArrayList<>();
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_DetailAbonnement")
-	private DetailAbonnement detailAbonnement;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_Ecole")
+	private Ecole ecole;
     
 	public Formation() {
 
@@ -99,12 +101,12 @@ public class Formation extends AbstractEntity {
 	}
 
 	
-	public DetailAbonnement getDetailAbonnement() {
-		return detailAbonnement;
+	public Ecole getDetailAbonnement() {
+		return ecole;
 	}
 
-	public void setDetailAbonnement(DetailAbonnement detailAbonnement) {
-		this.detailAbonnement = detailAbonnement;
+	public void setDetailAbonnement(Ecole detailAbonnement) {
+		this.ecole = detailAbonnement;
 	}
 
 	

@@ -1,47 +1,60 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ci.weget.web.dao.TypeEtablissementRepository;
-import ci.weget.web.entites.DetailAbonnement;
-import ci.weget.web.entites.TypeEtablissement;
+import ci.weget.web.entites.ecole.Ecole;
+import ci.weget.web.entites.ecole.Temoignage;
+import ci.weget.web.entites.ecole.TypeEtablissement;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
 public class TypEtablissementMetierImpl implements ITypeEtablissementMetier {
 @Autowired
-private TypeEtablissementRepository typeEtablissement;
+private TypeEtablissementRepository typeEtablissementRepository;
 	@Override
 	public TypeEtablissement creer(TypeEtablissement entity) throws InvalideTogetException {
 		
-		return typeEtablissement.save(entity);
+		return typeEtablissementRepository.save(entity);
 	}
 
 	@Override
-	public TypeEtablissement modifier(TypeEtablissement entity) throws InvalideTogetException {
+	public TypeEtablissement modifier(TypeEtablissement modif) throws InvalideTogetException {
 		
-		return typeEtablissement.save(entity);
+		Optional<TypeEtablissement> typeEtablissement = typeEtablissementRepository.findById(modif.getId());
+
+		if (modif != null) {
+			
+			if (typeEtablissement.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+		
+		return typeEtablissementRepository.save(modif);
 	}
 
 	@Override
 	public List<TypeEtablissement> findAll() {
 		
-		return typeEtablissement.findAll();
+		return typeEtablissementRepository.findAll();
 	}
 
 	@Override
 	public TypeEtablissement findById(Long id) {
 		
-		return typeEtablissement.getTypeEtablissementByid(id);
+		return typeEtablissementRepository.getTypeEtablissementByid(id);
 	}
 
 	@Override
 	public boolean supprimer(Long id) {
-		// TODO Auto-generated method stub
-		return false;
+		typeEtablissementRepository.deleteById(id);
+		return true;
 	}
 
 	@Override
@@ -59,7 +72,7 @@ private TypeEtablissementRepository typeEtablissement;
 	@Override
 	public TypeEtablissement rechercheParLibelle(String libelle) {
 		
-		return typeEtablissement.findByLibelle(libelle);
+		return typeEtablissementRepository.findByLibelle(libelle);
 	}
 
 	

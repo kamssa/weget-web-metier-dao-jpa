@@ -1,12 +1,17 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ci.weget.web.dao.LigneCommandeRepository;
-import ci.weget.web.entites.LigneCommande;
+import ci.weget.web.entites.abonnement.Gallery;
+import ci.weget.web.entites.commande.LigneCommande;
+import ci.weget.web.entites.commande.Panier;
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
@@ -18,11 +23,52 @@ LigneCommandeRepository ligneCommandeRepository;
 		
 		return ligneCommandeRepository.save(entity);
 	}
-
 	@Override
-	public LigneCommande modifier(LigneCommande entity) throws InvalideTogetException {
-		// TODO Auto-generated method stub
-		return ligneCommandeRepository.save(entity);
+	public boolean ajoutLigneCommande(Personne personne,Espace espace,double quantite, double montant,boolean abonneSpecial,double nbreJours) {
+		
+		LigneCommande lc = new LigneCommande();
+		
+	 if (abonneSpecial==false) {
+			System.out.println("$$$$$$$$$$$$$$$$$$$$$$$abonneSpecial"+abonneSpecial);
+
+       
+      
+			
+			lc.setPersonne(personne);
+			lc.setQuantite(quantite);
+			lc.setMontant(montant);
+			lc.setAbonneSpecial(false);
+			
+       // panierRepository.save(p);
+	}if(abonneSpecial==true) {
+		
+		
+		lc.setPersonne(personne);
+		lc.setQuantite(quantite);
+		lc.setMontant(montant);
+		lc.setAbonneSpecial(true);
+		lc.setNbreJours(nbreJours);
+       
+	}
+	
+	ligneCommandeRepository.save(lc);
+
+	return true;
+	}
+	@Override
+	public LigneCommande modifier(LigneCommande modif) throws InvalideTogetException {
+		Optional<LigneCommande> ligneCommande = ligneCommandeRepository.findById(modif.getId());
+
+		if (modif != null) {
+			
+			if (ligneCommande.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+		
+		return ligneCommandeRepository.save(modif);
 	}
 
 	@Override
@@ -56,4 +102,13 @@ LigneCommandeRepository ligneCommandeRepository;
 		return false;
 	}
 
+	
+
+	@Override
+	public List<LigneCommande> findLigneCommandeParPersonneId(long id) {
+		// TODO Auto-generated method stub
+		return ligneCommandeRepository.findAllLigneCommandeParPersonneId(id);
+	}
+
+	
 }

@@ -8,9 +8,7 @@ import javax.persistence.Table;
 @Table(name = "T_InfoEntete")
 public class InfoEntete extends AbstractEntity{
 
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 1L;
 	
 	private String libelle;

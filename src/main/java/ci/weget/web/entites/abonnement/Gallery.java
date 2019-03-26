@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.abonnement;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,25 +15,27 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
+import ci.weget.web.entites.AbstractEntity;
+import ci.weget.web.entites.ecole.Ecole;
+
 @Entity
 @Table(name = "T_Gallery")
 public class Gallery extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;
 	private String libelle;
-	@Column(columnDefinition="TEXT")
+	@Column(columnDefinition = "TEXT")
 	private String description;
 	private LocalDateTime date;
-    @ElementCollection
-	private List<String> pathPhoto=new ArrayList<>();
-    @ElementCollection
-	private List<String> pathVideo=new ArrayList<>();
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-	@JoinColumn(name = "id_Membre")
-	private Membre membre;
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-	@JoinColumn(name = "id_DetailAbonnement")
-	private DetailAbonnement detailAbonnement;
+	@ElementCollection
+	private List<String> pathPhoto = new ArrayList<>();
+	@ElementCollection
+	private List<String> pathVideo = new ArrayList<>();
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_Abonnement")
+	private Abonnement abonnement;
+	
+
 	public Gallery() {
 		super();
 
@@ -70,19 +72,19 @@ public class Gallery extends AbstractEntity {
 	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
-	
+
 	@PrePersist
 	@PreUpdate
 	private void setDate() {
 		this.date = LocalDateTime.now();
 	}
 
-	public Membre getMembre() {
-		return membre;
+	public Abonnement getAbonnement() {
+		return abonnement;
 	}
 
-	public void setMembre(Membre membre) {
-		this.membre = membre;
+	public void setAbonnement(Abonnement abonnement) {
+		this.abonnement = abonnement;
 	}
 
 	public List<String> getPathVideo() {
@@ -91,14 +93,6 @@ public class Gallery extends AbstractEntity {
 
 	public void setPathVideo(List<String> pathVideo) {
 		this.pathVideo = pathVideo;
-	}
-
-	public DetailAbonnement getDetailAbonnement() {
-		return detailAbonnement;
-	}
-
-	public void setDetailAbonnement(DetailAbonnement detailAbonnement) {
-		this.detailAbonnement = detailAbonnement;
 	}
 
 	

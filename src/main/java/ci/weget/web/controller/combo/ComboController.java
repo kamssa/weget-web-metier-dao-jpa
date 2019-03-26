@@ -20,14 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Commande;
-import ci.weget.web.entites.Personne;
 import ci.weget.web.entites.combo.Pays;
 import ci.weget.web.entites.combo.Quartier;
 import ci.weget.web.entites.combo.Ville;
+import ci.weget.web.entites.commande.Commande;
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
-import ci.weget.web.metier.IBlocksMetier;
+import ci.weget.web.metier.IEspaceMetier;
 import ci.weget.web.metier.combo.IComboPaysMetier;
 import ci.weget.web.metier.combo.IComboQuartierMetier;
 import ci.weget.web.metier.combo.IComboVilleMetier;

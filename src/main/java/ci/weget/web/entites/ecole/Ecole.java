@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.ecole;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +15,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import ci.weget.web.entites.AbstractEntity;
+import ci.weget.web.entites.Adresse;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.personne.Telephone;
+
 @Entity
-@Table(name = "T_DetailAbonnement")
-public class DetailAbonnement extends AbstractEntity {
+@Table(name = "T_Ecole")
+public class Ecole extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;
 	private String nom;
@@ -36,28 +41,30 @@ public class DetailAbonnement extends AbstractEntity {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "id_Telephones")
 	private List<Telephone> telephones = new ArrayList<>();
-	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Abonnement")
 	private Abonnement abonnement;
-
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "id_Abonnement")
-	private List<Chiffre> chiffre = new ArrayList<>();
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "id_Abonnement")
-	private List<Partenaire> partenaire = new ArrayList<>();
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "id_Abonnement")
-	private List<Temoignage> temoignage = new ArrayList<>();
-	private Long idBlock;
-
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@Column(name = "id_Abonnement", insertable = false, updatable = false)
+	private long idAbonnement;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_TypeEtablissement")
 	private TypeEtablissement typeEtablissement;
+	
+	@Column(name = "id_TypeEtablissement", insertable = false, updatable = false)
+	private long idTypeEtablissement;
 
-	public DetailAbonnement() {
+	public Ecole() {
 		super();
 
+	}
+
+	public long getIdAbonnement() {
+		return idAbonnement;
+	}
+
+	public long getIdTypeEtablissement() {
+		return idTypeEtablissement;
 	}
 
 	public TypeEtablissement getTypeEtablissement() {
@@ -124,38 +131,7 @@ public class DetailAbonnement extends AbstractEntity {
 		this.pathLogo = pathLogo;
 	}
 
-	public List<Chiffre> getChiffre() {
-		return chiffre;
-	}
-
-	public void setChiffre(List<Chiffre> chiffre) {
-		this.chiffre = chiffre;
-	}
-
-	public List<Partenaire> getPartenaire() {
-		return partenaire;
-	}
-
-	public void setPartenaire(List<Partenaire> partenaire) {
-		this.partenaire = partenaire;
-	}
-
-	public List<Temoignage> getTemoignage() {
-		return temoignage;
-	}
-
-	public void setTemoignage(List<Temoignage> temoignage) {
-		this.temoignage = temoignage;
-	}
-
-	public Long getIdBlock() {
-		return idBlock;
-	}
-
-	public void setIdBlock(Long idBlock) {
-		this.idBlock = idBlock;
-	}
-
+	
 	public List<String> getPathPhotoCouverture() {
 		return pathPhotoCouverture;
 	}
@@ -178,17 +154,15 @@ public class DetailAbonnement extends AbstractEntity {
 		int result = super.hashCode();
 		result = prime * result + ((abonnement == null) ? 0 : abonnement.hashCode());
 		result = prime * result + ((adresse == null) ? 0 : adresse.hashCode());
-		result = prime * result + ((chiffre == null) ? 0 : chiffre.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
-		result = prime * result + ((idBlock == null) ? 0 : idBlock.hashCode());
+		result = prime * result + (int) (idAbonnement ^ (idAbonnement >>> 32));
+		result = prime * result + (int) (idTypeEtablissement ^ (idTypeEtablissement >>> 32));
 		result = prime * result + ((nom == null) ? 0 : nom.hashCode());
-		result = prime * result + ((partenaire == null) ? 0 : partenaire.hashCode());
 		result = prime * result + ((pathLogo == null) ? 0 : pathLogo.hashCode());
 		result = prime * result + ((pathPhotoCouverture == null) ? 0 : pathPhotoCouverture.hashCode());
 		result = prime * result + ((presentation == null) ? 0 : presentation.hashCode());
 		result = prime * result + ((refDetailAbonnement == null) ? 0 : refDetailAbonnement.hashCode());
 		result = prime * result + ((telephones == null) ? 0 : telephones.hashCode());
-		result = prime * result + ((temoignage == null) ? 0 : temoignage.hashCode());
 		result = prime * result + ((typeEtablissement == null) ? 0 : typeEtablissement.hashCode());
 		return result;
 	}
@@ -201,7 +175,7 @@ public class DetailAbonnement extends AbstractEntity {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		DetailAbonnement other = (DetailAbonnement) obj;
+		Ecole other = (Ecole) obj;
 		if (abonnement == null) {
 			if (other.abonnement != null)
 				return false;
@@ -212,30 +186,19 @@ public class DetailAbonnement extends AbstractEntity {
 				return false;
 		} else if (!adresse.equals(other.adresse))
 			return false;
-		if (chiffre == null) {
-			if (other.chiffre != null)
-				return false;
-		} else if (!chiffre.equals(other.chiffre))
-			return false;
 		if (description == null) {
 			if (other.description != null)
 				return false;
 		} else if (!description.equals(other.description))
 			return false;
-		if (idBlock == null) {
-			if (other.idBlock != null)
-				return false;
-		} else if (!idBlock.equals(other.idBlock))
+		if (idAbonnement != other.idAbonnement)
+			return false;
+		if (idTypeEtablissement != other.idTypeEtablissement)
 			return false;
 		if (nom == null) {
 			if (other.nom != null)
 				return false;
 		} else if (!nom.equals(other.nom))
-			return false;
-		if (partenaire == null) {
-			if (other.partenaire != null)
-				return false;
-		} else if (!partenaire.equals(other.partenaire))
 			return false;
 		if (pathLogo == null) {
 			if (other.pathLogo != null)
@@ -262,11 +225,6 @@ public class DetailAbonnement extends AbstractEntity {
 				return false;
 		} else if (!telephones.equals(other.telephones))
 			return false;
-		if (temoignage == null) {
-			if (other.temoignage != null)
-				return false;
-		} else if (!temoignage.equals(other.temoignage))
-			return false;
 		if (typeEtablissement == null) {
 			if (other.typeEtablissement != null)
 				return false;
@@ -277,11 +235,12 @@ public class DetailAbonnement extends AbstractEntity {
 
 	@Override
 	public String toString() {
-		return "DetailAbonnement [nom=" + nom + ", typeEtablissement=" + typeEtablissement + ", refDetailAbonnement="
-				+ refDetailAbonnement + ", presentation=" + presentation + ", description=" + description
-				+ ", pathPhotoCouverture=" + pathPhotoCouverture + ", pathLogo=" + pathLogo + ", adresse=" + adresse
-				+ ", telephones=" + telephones + ", abonnement=" + abonnement + ", chiffre=" + chiffre + ", partenaire="
-				+ partenaire + ", temoignage=" + temoignage + ", idBlock=" + idBlock + "]";
+		return "Ecole [nom=" + nom + ", refDetailAbonnement=" + refDetailAbonnement + ", presentation=" + presentation
+				+ ", description=" + description + ", pathPhotoCouverture=" + pathPhotoCouverture + ", pathLogo="
+				+ pathLogo + ", adresse=" + adresse + ", telephones=" + telephones + ", abonnement=" + abonnement
+				+ ", idAbonnement=" + idAbonnement + ", typeEtablissement=" + typeEtablissement
+				+ ", idTypeEtablissement=" + idTypeEtablissement + "]";
 	}
 
+	
 }

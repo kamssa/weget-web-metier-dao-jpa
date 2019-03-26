@@ -1,8 +1,13 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.ecole;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_Chiffre")
@@ -13,9 +18,9 @@ public class Chiffre extends AbstractEntity {
 	private String chiffre;
 	@Column(columnDefinition="TEXT")
 	private String description;
-	/*@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_SousBlock")
-	private SousBlock sousBlock;*/
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_Ecole")
+	private Ecole ecole;
 
 	public String getTitre() {
 		return titre;

@@ -26,13 +26,13 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.Commande;
-import ci.weget.web.entites.Paiement;
+import ci.weget.web.entites.commande.Commande;
+import ci.weget.web.entites.commande.Paiement;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.ICommandeMetier;
 import ci.weget.web.metier.IPaiementMetier;
-import ci.weget.web.modeles.ICreeAbonne;
-import ci.weget.web.modeles.ICreeAbonneGratuit;
+import ci.weget.web.modele.metier.ICreeAbonne;
+import ci.weget.web.modele.metier.ICreeAbonneGratuit;
 import ci.weget.web.modeles.Reponse;
 import ci.weget.web.modeles.ReponsePaiement;
 import ci.weget.web.utilitaires.Static;;
@@ -79,7 +79,8 @@ public class PaiementController {
 		int montant = (int) montantCommande;
 		paiement.setCpm_amount(montant);
 		paiement.setCommande(commande);
-		paiement.setCpm_trans_id(commande.getId().intValue());
+		paiement.setCpm_trans_id(commande.getNumero());
+		
 
 		try {
 			String url = "https://api.cinetpay.com/v1/?method=getSignatureByPost";
@@ -96,7 +97,7 @@ public class PaiementController {
 			map.add("cpm_payment_config", paiement.getCpm_payment_config());
 			map.add("cpm_site_id", Integer.toString(paiement.getCpm_site_id()));
 			map.add("cpm_trans_date", paiement.getCpm_trans_date());
-			map.add("cpm_trans_id",Integer.toString(paiement.getCpm_trans_id()));
+			map.add("cpm_trans_id",paiement.getCpm_trans_id());
 			map.add("cpm_version", paiement.getCpm_version());
 			//.add("notify_url", paiement.getNotify_url());
 
@@ -104,24 +105,34 @@ public class PaiementController {
 					headers);
 			RestTemplate restTemplate = new RestTemplate();
 			ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-			paye = paiementMetier.creer(paiement);
-			Paiement retour= new Paiement();
-			retour.setCpm_amount(paye.getCpm_amount());
-			retour.setCpm_trans_date(paye.getCpm_trans_date());
-			retour.setCpm_trans_id(paye.getCpm_trans_id());
+			
+			//Paiement retour= new Paiement();
+			//paye.setCpm_amount(paiement.getCpm_amount());
+			//paye.setCpm_trans_date(paiement.getCpm_trans_date());
+			//paye.setCpm_trans_id(paiement.getCpm_trans_id());
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("%s %s %s", paye.getCpm_trans_date(),paye.getCpm_trans_id(),paye.getCpm_amount()));
+			messages.add(String.format("%s %s %s", paiement.getCpm_trans_date(),paiement.getCpm_trans_id(),paiement.getCpm_amount()));
 			String signature = response.getBody();
 
 			reponseSignature = new Reponse<String>(0, messages, signature);
-			reponsePaie = new Reponse<Paiement>(0, messages, paye);
-			paye.getCommande().setPaye(false);
+			reponsePaie = new Reponse<Paiement>(0, messages, paiement);
+			paiement.getCommande().setPaye(false);
 		   //Commande com=	paye.getCommande();
-		   Paiement pa=	paiementMetier.modifier(paye);
-		  reponsePaie = new Reponse<Paiement>(0, messages, paye);
+			paiement.setSignature(signature);
+		    
+            Paiement paie= paiementMetier.creer(paiement);
+            Paiement p= new Paiement();
+            p.setCpm_amount(paie.getCpm_amount());
+            p.setCpm_site_id(paie.getCpm_site_id());
+            p.setCpm_trans_id(paie.getCpm_trans_id());
+            p.setCpm_trans_date(paie.getCpm_trans_date());
+          
+            
+		    reponsePaie = new Reponse<Paiement>(0, messages, p);
 			reponse = new Reponse<ResponseEntity<String>>(0,null, response);
+			reponsePaiement = new ReponsePaiement<Paiement, String>(0,null, p, signature);
 			
-			reponsePaiement = new ReponsePaiement<Paiement, String>(0,null, retour, signature);
+            
 			//creeAbonne.creerUnAbonne(commande.getPersonne());
 		} catch (Exception e) {
 			reponse = new Reponse<ResponseEntity<String>>(1, Static.getErreursForException(e), null);
@@ -130,36 +141,96 @@ public class PaiementController {
 		return jsonMapper.writeValueAsString(reponsePaiement);
 		
 	}
+	
+	@PostMapping("/reponseCinetPay")
+	public String creerReponse(@RequestBody Paiement paiement)
+			throws InvalideTogetException, IOException {
+		
+		Reponse<Paiement> reponse = null;
+		
+
+		try {
+			
+			reponse = new Reponse<Paiement>(0,null,null);
+			//creeAbonne.creerUnAbonne(commande.getPersonne());
+		} catch (Exception e) {
+			reponse = new Reponse<Paiement>(1, Static.getErreursForException(e), null);
+		}
+        
+		return jsonMapper.writeValueAsString(reponse);
+		
+	}
 	/////////////////////////////////////////////////////////////////////////////////////////
 	// modifier un paiement dans la base de donnee
 	///////////////////////////////////////////////////////////////////////////////////////// ///////////////////////////////////////////
 
-	@PutMapping("/paiement")
-	public String modfier(@RequestBody Paiement modif) throws JsonProcessingException {
-		Reponse<Paiement> reponsePersModif = null;
-		Reponse<Paiement> reponse = null;
+	@PostMapping("/paiementModif")
+		public String modfier(@RequestBody Paiement paiement, @PathParam(value = "id") Long id)
+				throws InvalideTogetException, IOException {
+			Reponse<ResponseEntity<String>> reponse = null;
+			Reponse<Paiement> reponsePaie = null;
+			ReponsePaiement<Paiement, String> reponsePaiement = null;
+			Reponse<String> reponseSignature = null;
+			Reponse<List<String>> listString;
+			Commande commande = commandeMetier.findById(id);
+			Paiement paye = null;
+			double montantCommande = commande.getMontant();
+			int montant = (int) montantCommande;
+			paiement.setCpm_amount(montant);
+			paiement.setCommande(commande);
+			paiement.setCpm_trans_id(commande.getNumero());
+			
 
-		// on recupere la personne a modifier
-		reponsePersModif = getPaiementById(modif.getId());
-		if (reponsePersModif.getBody() != null) {
 			try {
-				Paiement p2 = paiementMetier.modifier(modif);
+				String url = "https://api.cinetpay.com/v1/?method=getSignatureByPost";
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+				MultiValueMap<Object, Object> map = new LinkedMultiValueMap<Object, Object>();
+				map.add("apikey", paiement.getApikey());
+				map.add("cpm_amount", Integer.toString(paiement.getCpm_amount()));
+				map.add("cpm_currency", paiement.getCpm_currency());
+				map.add("cpm_custom", paiement.getCpm_custom());
+				map.add("cpm_designation", paiement.getCpm_designation());
+				map.add("cpm_language", paiement.getCpm_language());
+				map.add("cpm_page_action", paiement.getCpm_page_action());
+				map.add("cpm_payment_config", paiement.getCpm_payment_config());
+				map.add("cpm_site_id", Integer.toString(paiement.getCpm_site_id()));
+				map.add("cpm_trans_date", paiement.getCpm_trans_date());
+				map.add("cpm_trans_id",paiement.getCpm_trans_id());
+				map.add("cpm_version", paiement.getCpm_version());
+				//.add("notify_url", paiement.getNotify_url());
+
+				HttpEntity<MultiValueMap<Object, Object>> request = new HttpEntity<MultiValueMap<Object, Object>>(map,
+						headers);
+				RestTemplate restTemplate = new RestTemplate();
+				ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+				
+				//Paiement retour= new Paiement();
+				//paye.setCpm_amount(paiement.getCpm_amount());
+				//paye.setCpm_trans_date(paiement.getCpm_trans_date());
+				//paye.setCpm_trans_id(paiement.getCpm_trans_id());
 				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s a modifier avec succes", p2.getId()));
-				reponse = new Reponse<Paiement>(0, messages, p2);
-			} catch (InvalideTogetException e) {
+				messages.add(String.format("%s %s %s", paiement.getCpm_trans_date(),paiement.getCpm_trans_id(),paiement.getCpm_amount()));
+				String signature = response.getBody();
 
-				reponse = new Reponse<Paiement>(1, Static.getErreursForException(e), null);
+				reponseSignature = new Reponse<String>(0, messages, signature);
+				reponsePaie = new Reponse<Paiement>(0, messages, paiement);
+				paiement.getCommande().setPaye(false);
+			   //Commande com=	paye.getCommande();
+				reponsePaiement = new ReponsePaiement<Paiement, String>(0,null, paiement, signature);
+				paiement.setSignature(reponseSignature.getBody());
+	            System.out.println("signature*****************"+reponsePaiement.getBody().getSignature());
+			    
+	            Paiement paie= paiementMetier.modifier(paiement);
+			    reponsePaie = new Reponse<Paiement>(0, messages, paiement);
+				reponse = new Reponse<ResponseEntity<String>>(0,null, response);
+				
+				//creeAbonne.creerUnAbonne(commande.getPersonne());
+			} catch (Exception e) {
+				reponse = new Reponse<ResponseEntity<String>>(1, Static.getErreursForException(e), null);
 			}
-
-		} else {
-			List<String> messages = new ArrayList<>();
-			messages.add(String.format("Le paiement n'existe pas"));
-			reponse = new Reponse<Paiement>(0, messages, null);
+	        
+			return jsonMapper.writeValueAsString(reponsePaiement);
+			
 		}
-
-		return jsonMapper.writeValueAsString(reponse);
-
-	}
-
 }

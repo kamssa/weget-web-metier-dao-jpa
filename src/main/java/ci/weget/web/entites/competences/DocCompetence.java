@@ -8,19 +8,19 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import ci.weget.web.entites.Abonnement;
 import ci.weget.web.entites.AbstractEntity;
-import ci.weget.web.entites.Membre;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.personne.Membre;
 
 @Entity
-@Table(name="t_DocumentCompetence")
-public class DocCompetence extends AbstractEntity{
+@Table(name = "t_DocumentCompetence")
+public class DocCompetence extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;
 	private String titre;
-	@Column(columnDefinition="TEXT")
+	@Column(columnDefinition = "TEXT")
 	private String description;
-   
+
 	private String pathDocument;
 
 	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
@@ -29,10 +29,16 @@ public class DocCompetence extends AbstractEntity{
 
 	public DocCompetence() {
 		super();
-		
+
 	}
 
-	
+	public Abonnement getAbonnement() {
+		return abonnement;
+	}
+
+	public void setAbonnement(Abonnement abonnement) {
+		this.abonnement = abonnement;
+	}
 
 	public String getTitre() {
 		return titre;
@@ -58,6 +64,4 @@ public class DocCompetence extends AbstractEntity{
 		this.pathDocument = pathDocument;
 	}
 
-	
-	
 }

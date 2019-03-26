@@ -1,8 +1,10 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.ecole;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name="t_Programme")

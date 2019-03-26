@@ -1,8 +1,9 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.commande;
 
 import java.time.LocalDateTime;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -10,6 +11,9 @@ import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
+import ci.weget.web.entites.personne.Personne;
 
 @Entity
 @Table(name = "T_Commande")
@@ -21,10 +25,12 @@ public class Commande extends AbstractEntity {
 	private LocalDateTime date;
     private String motif;
 	private double montant;
-	private int numero;
-	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+	private String numero;
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Personne")
 	private Personne personne;
+	@Column(name = "id_Personne", insertable = false, updatable = false)
+	private long idPersone;
 
 	public Commande() {
 		super();
@@ -44,11 +50,16 @@ public class Commande extends AbstractEntity {
 		this.date = LocalDateTime.now();
 	}
 
-	public int getNumero() {
+	
+	public long getIdPersone() {
+		return idPersone;
+	}
+
+	public String getNumero() {
 		return numero;
 	}
-	
-	public void setNumero(int numero) {
+
+	public void setNumero(String numero) {
 		this.numero = numero;
 	}
 

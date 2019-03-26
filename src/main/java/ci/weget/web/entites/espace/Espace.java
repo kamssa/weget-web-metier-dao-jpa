@@ -1,12 +1,14 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.espace;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import ci.weget.web.entites.AbstractEntity;
+
 @Entity
-@Table(name = "T_Block")
-public class Block extends AbstractEntity {
+@Table(name = "T_Espace")
+public class Espace extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -16,32 +18,47 @@ public class Block extends AbstractEntity {
 
 	@Column(columnDefinition="TEXT")
 	private String description;
-	private String typeBlock;
+	private String typeEspace;
 	private int position;
 
 	
 
-	public Block() {
+	public Espace() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
-	public Block(String libelle, String pathPhoto) {
+	public Espace(String libelle, String pathPhoto) {
 		super();
 		this.libelle = libelle;
 		this.pathPhoto = pathPhoto;
 	}
 
-	public Block(String libelle) {
+	public Espace(String libelle) {
 		super();
 		this.libelle = libelle;
 	}
 
-	public Block(String libelle, String pathPhoto, String description) {
+	public Espace(String libelle, String pathPhoto, String description, String typeEspace, int position) {
 		super();
 		this.libelle = libelle;
 		this.pathPhoto = pathPhoto;
 		this.description = description;
+		this.typeEspace = typeEspace;
+		this.position = position;
+	}
+
+	public Espace(String libelle, String pathPhoto, String description) {
+		super();
+		this.libelle = libelle;
+		this.pathPhoto = pathPhoto;
+		this.description = description;
+	}
+
+	public Espace(String libelle, String typeEspace, int position) {
+		super();
+		this.libelle = libelle;
+		this.typeEspace = typeEspace;
+		this.position = position;
 	}
 
 	public String getPathPhoto() {
@@ -76,12 +93,13 @@ public class Block extends AbstractEntity {
 		this.description = description;
 	}
 
-	public String getTypeBlock() {
-		return typeBlock;
+	
+	public String getTypeEspace() {
+		return typeEspace;
 	}
 
-	public void setTypeBlock(String typeBlock) {
-		this.typeBlock = typeBlock;
+	public void setTypeEspace(String typeEspace) {
+		this.typeEspace = typeEspace;
 	}
 
 	@Override
@@ -92,7 +110,7 @@ public class Block extends AbstractEntity {
 		result = prime * result + ((libelle == null) ? 0 : libelle.hashCode());
 		result = prime * result + ((pathPhoto == null) ? 0 : pathPhoto.hashCode());
 		result = prime * result + position;
-		result = prime * result + ((typeBlock == null) ? 0 : typeBlock.hashCode());
+		result = prime * result + ((typeEspace == null) ? 0 : typeEspace.hashCode());
 		return result;
 	}
 
@@ -104,7 +122,7 @@ public class Block extends AbstractEntity {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Block other = (Block) obj;
+		Espace other = (Espace) obj;
 		if (description == null) {
 			if (other.description != null)
 				return false;
@@ -122,10 +140,10 @@ public class Block extends AbstractEntity {
 			return false;
 		if (position != other.position)
 			return false;
-		if (typeBlock == null) {
-			if (other.typeBlock != null)
+		if (typeEspace == null) {
+			if (other.typeEspace != null)
 				return false;
-		} else if (!typeBlock.equals(other.typeBlock))
+		} else if (!typeEspace.equals(other.typeEspace))
 			return false;
 		return true;
 	}

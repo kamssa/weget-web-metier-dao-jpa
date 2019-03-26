@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_Specialite")
+@Table(name = "T_ComboSpecialite")
 public class Specialite extends AbstractEntity {
 
 	

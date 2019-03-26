@@ -4,26 +4,16 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Abonnement;
-import ci.weget.web.entites.Panier;
+import ci.weget.web.entites.commande.Panier;
 
+@Repository
 public interface PanierRepository extends JpaRepository<Panier, Long> {
-	// ramener tous les panier
-	@Query("select p from Panier p ")
-	List<Panier> findAllPanier();
 
-	// panier par identifiant
-	@Query("select p from Panier p where p.id=?1")
-	Panier findPanierById(Long id);
+// recupere les panier d'une personne
+	@Query("select panier from Panier panier where panier.personne.id=?1")
+	List<Panier> findPaniersByPersonne(long idPersonne);
 
-	// supprimer par id
-	@Query("DELETE from Panier p where p.id=?1")
-	Panier supprimerPanierById(Long id);
-
-	// ramener les panier d'une personne par id
-	@Query("select paniers from Panier paniers  where paniers.personne.id=?1")
-	List<Panier> findAllPanierParPersonneId(long idPersonne);
 
 }

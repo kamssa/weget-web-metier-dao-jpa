@@ -22,6 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,28 +33,30 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Membre;
-import ci.weget.web.entites.Personne;
-import ci.weget.web.entites.Role;
-import ci.weget.web.entites.RoleName;
-import ci.weget.web.entites.VerificationToken;
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.personne.Membre;
+import ci.weget.web.entites.personne.Personne;
+import ci.weget.web.entites.personne.Role;
+import ci.weget.web.entites.personne.RoleName;
+import ci.weget.web.entites.personne.VerificationToken;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.listener.OnRegistrationCompleteEvent;
-import ci.weget.web.metier.IBlocksMetier;
+import ci.weget.web.metier.IEspaceMetier;
 import ci.weget.web.metier.IMembreMetier;
 import ci.weget.web.metier.IRoleMetier;
 import ci.weget.web.modeles.ApiResponse;
 import ci.weget.web.modeles.JwtAuthenticationResponse;
 import ci.weget.web.modeles.LoginRequest;
 import ci.weget.web.modeles.Reponse;
+import ci.weget.web.modeles.ReponsePaiement;
 import ci.weget.web.security.JwtTokenProvider;
 import ci.weget.web.utilitaires.Static;
 
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin
 public class RegistractionController {
 
 	@Autowired
@@ -62,7 +65,7 @@ public class RegistractionController {
 	private IRoleMetier roleMetier;
 
 	@Autowired
-	private IBlocksMetier blocksMetier;
+	private IEspaceMetier blocksMetier;
 	@Autowired
 	AuthenticationManager authenticationManager;
 	@Autowired
@@ -104,6 +107,9 @@ public class RegistractionController {
 
 		} catch (RuntimeException e) {
 			new Reponse<Personne>(1, Static.getErreursForException(e), null);
+		} catch (InvalideTogetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		if (personne == null) {
 			List<String> messages = new ArrayList<String>();
@@ -115,38 +121,42 @@ public class RegistractionController {
 	}
 
 	// recuprer le block a partir de son identifiant
-	private Reponse<Block> getBlock(final Long id) {
+	private Reponse<Espace> getBlock(final Long id) {
 		// on récupère le block
-		Block block = null;
+		Espace block = null;
 		try {
 			block = blocksMetier.findById(id);
 		} catch (Exception e1) {
-			return new Reponse<Block>(1, Static.getErreursForException(e1), null);
+			return new Reponse<Espace>(1, Static.getErreursForException(e1), null);
 		}
 		// block existant ?
 		if (block == null) {
 			List<String> messages = new ArrayList<String>();
 			messages.add(String.format("Le block n'exste pas", id));
-			return new Reponse<Block>(2, messages, null);
+			return new Reponse<Espace>(2, messages, null);
 		}
 		// ok
-		return new Reponse<Block>(0, null, block);
+		return new Reponse<Espace>(0, null, block);
 	}
 
 	@PostMapping("/login")
 	public String authenticateUser(@Valid @RequestBody LoginRequest loginRequest) throws JsonProcessingException {
 		Reponse<ResponseEntity<?>> reponse;
-	     System.out.println("LoginRequest********************"+loginRequest);
-
+		ReponsePaiement<ResponseEntity<?>, String> response;
 		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getLogin(), loginRequest.getPassword()));
+
+				new UsernamePasswordAuthenticationToken(loginRequest.getLoginOrTelephone(),
+						loginRequest.getPassword()));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
 		String jwt = tokenProvider.generateToken(authentication);
+		//String login = tokenProvider.getUserPrincipal().getLogin();
+		//String login = tokenProvider.getPersonne().getLogin();
 
 		reponse = new Reponse<ResponseEntity<?>>(0, null, ResponseEntity.ok(new JwtAuthenticationResponse(jwt)));
-
-		return jsonMapper.writeValueAsString(reponse);
+		response = new ReponsePaiement<ResponseEntity<?>, String>(0, null,
+				ResponseEntity.ok(new JwtAuthenticationResponse(jwt)));
+		return jsonMapper.writeValueAsString(response);
 
 	}
 
@@ -154,25 +164,27 @@ public class RegistractionController {
 		return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
 	}
 
-	@PostMapping("/membres")
+	@PostMapping("/registration")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public String registerUser(@Valid @RequestBody Personne signUpRequest,
-			@RequestParam(value="action")String action,
-			BindingResult result1,
-			HttpServletRequest request, Errors errors ) throws Exception {
+			@RequestParam(value = "action") String action, BindingResult result1, HttpServletRequest request,
+			Errors errors) throws Exception, FirebaseAuthException {
 
 		Reponse<ResponseEntity<?>> reponse;
-
+		
 		UserRecord record = membreMetier.createUser(signUpRequest);
 		List<String> messages = new ArrayList<>();
 		messages.add(String.format("%s firebase a ete creer avec succee", record.getUid()));
+		
+		
 		if (result1.hasErrors()) {
 			throw new RuntimeException("erreur");
 		}
 
-		Role userRole = roleMetier.getUserRoleByNom(RoleName.ROLE_MEMBRE);
+		Role userRole = roleMetier.findByRoleName(RoleName.MEMBRE);
 		signUpRequest.setRoles(Collections.singleton(userRole));
-		Membre registered =  (Membre) membreMetier.creer(signUpRequest);
+		signUpRequest.setActived(true);
+		Membre registered = (Membre) membreMetier.creer(signUpRequest);
 		//////////////////////////////////////////////////
 		if (registered == null) {
 			result1.rejectValue("email", "message.regError");
@@ -187,8 +199,7 @@ public class RegistractionController {
 			String appUrl = request.getContextPath();
 			System.out.println(request.getContextPath());
 
-			eventPublisher
-					.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), action));
+			eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), action));
 			reponse = new Reponse<ResponseEntity<?>>(0, null,
 					ResponseEntity.created(location).body(new ApiResponse(true, "User registered successfully")));
 			System.out.println(request.getContextPath());
@@ -208,46 +219,42 @@ public class RegistractionController {
 		Reponse<Personne> reponse = null;
 
 		Membre user = null;
-
+		// on recupre le membre a patir de son token dans la base
 		user = membreMetier.getMembre(token);
-		if (user.isActived() == false) {
-			final String result = membreMetier.validateVerificationToken(token);
-			Reponse<Personne> membreReponse = getMembreByLogin(login);
-			Membre membre = (Membre) membreReponse.getBody();
-			if (membre.getLogin() != user.getLogin()) {
-				throw new RuntimeException("erreur du login");
-			}
-			if (result.equals("VALID")) {
-				// user = membreMetier.getMembre(token);
-                
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s à été créer avec succes avec statut membres", user.getLogin()));
-				reponse = new Reponse<Personne>(0, messages, user);
+		if (user.getLogin().equals(login)) {
 
+			if (user.isEnabled() == false) {
+
+				final String result = membreMetier.validateVerificationToken(token);
+				if (result.equals("VALID")) {
+					// user = membreMetier.getMembre(token);
+
+					List<String> messages = new ArrayList<>();
+					messages.add(String.format("%s à été créer avec succes avec statut membres", user.getLogin()));
+					reponse = new Reponse<Personne>(0, messages, user);
+
+				} else {
+					throw new RuntimeException("votre code a expire" + result);
+				}
 			} else {
-				throw new RuntimeException("votre code a expire" + result);
+				throw new RuntimeException("vous etes deja active");
 			}
-
 		} else {
-			throw new RuntimeException("Votre activation a deja ete pris en compte");
+			throw new RuntimeException("mauvais login");
 		}
 
 		return jsonMapper.writeValueAsString(reponse);
 	}
 
 	@GetMapping("/resendRegistrationToken")
-	public String resendRegistrationToken(
-			HttpServletRequest request, 
-			@RequestParam("login") String login,
-			@RequestParam(value = "action") String action)
-			throws JsonProcessingException {
+	public String resendRegistrationToken(HttpServletRequest request, @RequestParam("login") String login,
+			@RequestParam(value = "action") String action) throws JsonProcessingException {
 
 		Reponse<Personne> reponse = getMembreByLogin(login);
 		Membre membre = (Membre) reponse.getBody();
 		if (membre.isEnabled() == false) {
 			VerificationToken verifier = membreMetier.getVericationTokenParMembre(membre.getId());
-            
-            
+
 			Membre user = membreMetier.getMembre(verifier.getToken());
 
 			membreMetier.generateNewVerificationToken(verifier.getToken());
@@ -273,11 +280,11 @@ public class RegistractionController {
 		Membre membre = (Membre) reponse.getBody();
 
 		VerificationToken verifier = membreMetier.getVericationTokenParMembre(membre.getId());
-         
+
 		LocalDateTime dateActuelle = LocalDateTime.now();
 		if (dateActuelle.isBefore(verifier.getExpiryDate()) && verifier.getToken().equals(token)) {
 			reponseBoolean = new Reponse<Boolean>(0, null, true);
-		}else if (dateActuelle.isAfter(verifier.getExpiryDate())) {
+		} else if (dateActuelle.isAfter(verifier.getExpiryDate())) {
 			reponseBoolean = new Reponse<Boolean>(0, null, false);
 		} else {
 			List<String> messages = new ArrayList<>();
@@ -295,77 +302,86 @@ public class RegistractionController {
 		Reponse<Personne> reponse = getMembreByLogin(login);
 		Membre membre = (Membre) reponse.getBody();
 
-		
-			VerificationToken verifier = membreMetier.getVericationTokenParMembre(membre.getId());
+		VerificationToken verifier = membreMetier.getVericationTokenParMembre(membre.getId());
 
-			Membre user = membreMetier.getMembre(verifier.getToken());
+		Membre user = membreMetier.getMembre(verifier.getToken());
 
-			membreMetier.generateNewVerificationToken(verifier.getToken());
-			eventPublisher.publishEvent(new OnRegistrationCompleteEvent(user, request.getLocale(), action));
-			List<String> messages = new ArrayList<>();
-			messages.add(String.format("%s à été créer avec succes avec statut membres", user.getLogin()));
-			reponse = new Reponse<Personne>(0, messages, user);
-			reponse = new Reponse<Personne>(0, messages, membre);
+		membreMetier.generateNewVerificationToken(verifier.getToken());
+		eventPublisher.publishEvent(new OnRegistrationCompleteEvent(user, request.getLocale(), action));
+		List<String> messages = new ArrayList<>();
+		messages.add(String.format("%s à été créer avec succes avec statut membres", user.getLogin()));
+		reponse = new Reponse<Personne>(0, messages, user);
+		reponse = new Reponse<Personne>(0, messages, membre);
 
-		
 		return jsonMapper.writeValueAsString(reponse);
 	}
 
 	@GetMapping("/newPassword")
-	public String registerPassword(@RequestParam("login") String login,@RequestParam("password") String password,@RequestParam("repassword") String repassword,@RequestParam("token") String token) throws Exception {
+	public String registerPassword(@RequestParam("login") String login, @RequestParam("password") String password,
+			@RequestParam("repassword") String repassword, @RequestParam("token") String token) throws Exception {
 		Reponse<Personne> reponse = null;
 		reponse = getMembreByLogin(login);
 		Membre membre = (Membre) reponse.getBody();
 		VerificationToken verifier = membreMetier.getVericationTokenParMembre(membre.getId());
 		if (verifier.getToken().equals(token)) {
 			Membre user = membreMetier.getMembre(verifier.getToken());
+
 			LocalDateTime dateActuelle = LocalDateTime.now();
-			
-				try {
-                    
-					Membre p1 = (Membre) membreMetier.modifierPassword(login,password,repassword);
-	                 membreMetier.updateUser(p1);
-					List<String> messages = new ArrayList<>();
-					messages.add(String.format("%s à été créer avec succes avec statut membres", p1.getLogin()));
-					reponse = new Reponse<Personne>(0, messages, p1);
 
-				} catch (Exception e) {
-					// throw new RuntimeException("mail non enregistrer");
-					reponse = new Reponse<Personne>(1, Static.getErreursForException(e), null);
-
-				}
-
-			
-
-		}else {
-			throw new RuntimeException("mauvais token");
-		}
-		
-		return jsonMapper.writeValueAsString(reponse);
-	}
-
-	@PutMapping("/membres")
-	public String modifier(@RequestBody Personne modif) throws JsonProcessingException {
-		Reponse<Personne> reponsePersModif = null;
-		Reponse<Personne> reponse = null;
-
-		// on recupere la personne a modifier
-		reponsePersModif = getMembreById(modif.getId());
-		if (reponsePersModif.getStatus() == 0) {
 			try {
-				Personne p2 = membreMetier.modifier(modif);
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s %s a modifier avec succes", p2.getNom(), p2.getPrenom()));
-				reponse = new Reponse<Personne>(0, messages, p2);
-			} catch (InvalideTogetException e) {
 
+				Membre p1 = (Membre) membreMetier.modifierPassword(login, password, repassword);
+				List<String> messages = new ArrayList<>();
+				messages.add(String.format("%s à été créer avec succes avec statut membres", p1.getLogin()));
+				reponse = new Reponse<Personne>(0, messages, p1);
+
+			} catch (Exception e) {
 				reponse = new Reponse<Personne>(1, Static.getErreursForException(e), null);
+
 			}
 
 		} else {
+			throw new RuntimeException("mauvais token");
+		}
+
+		return jsonMapper.writeValueAsString(reponse);
+	}
+
+	@PostMapping("/resetPassword/{login}")
+	public String modifierMotDePasse(@PathVariable("login") String login, @RequestParam("password") String password,
+			@RequestParam("repassword") String repassword) throws JsonProcessingException {
+
+		Reponse<Personne> reponse;
+
+		try {
+
+			Personne p = membreMetier.modifierPassword(login, password, repassword);
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("La personne n'existe pas"));
-			reponse = new Reponse<Personne>(0, messages, null);
+			messages.add(String.format(" à été créer avec succes"));
+			reponse = new Reponse<Personne>(0, messages, p);
+
+		} catch (Exception e) {
+
+			reponse = new Reponse<Personne>(1, Static.getErreursForException(e), null);
+		}
+		return jsonMapper.writeValueAsString(reponse);
+
+	}
+	@GetMapping("/updatePassword")
+	public String modifierPasswordCopmte(@RequestParam("id") Long id, @RequestParam("password") String password,
+			@RequestParam("nouveauPassword") String nouveauPassword,
+			@RequestParam("confirmePassword") String confirmePassword) throws JsonProcessingException {
+		Reponse<Personne> reponse = null;
+
+		try {
+			Personne p2 = membreMetier.changerPasswordCompte(id, password, nouveauPassword, confirmePassword);
+
+			List<String> messages = new ArrayList<>();
+			messages.add(String.format("%s %s a modifier avec succes", p2.getNom(), p2.getPrenom()));
+			reponse = new Reponse<Personne>(0, messages, p2);
+		} catch (InvalideTogetException e) {
+
+			reponse = new Reponse<Personne>(1, Static.getErreursForException(e), null);
 		}
 
 		return jsonMapper.writeValueAsString(reponse);

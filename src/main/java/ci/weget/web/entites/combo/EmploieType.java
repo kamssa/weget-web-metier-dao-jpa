@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_EmploieType")
+@Table(name = "T_ComboEmploieType")
 public class EmploieType extends AbstractEntity {
 
 	

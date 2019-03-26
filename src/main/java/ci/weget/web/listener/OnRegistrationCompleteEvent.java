@@ -4,7 +4,7 @@ import java.util.Locale;
 
 import org.springframework.context.ApplicationEvent;
 
-import ci.weget.web.entites.Membre;
+import ci.weget.web.entites.personne.Membre;
 
 
 public class OnRegistrationCompleteEvent extends ApplicationEvent {

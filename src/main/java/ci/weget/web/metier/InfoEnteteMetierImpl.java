@@ -34,7 +34,7 @@ public class InfoEnteteMetierImpl implements IinfoEnteteMetier{
 	@Override
 	public InfoEntete findById(Long id) {
 		// TODO Auto-generated method stub
-		return null;
+		return infoEnteteRepository.findById(id).get();
 	}
 
 	@Override

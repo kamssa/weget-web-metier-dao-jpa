@@ -1,19 +1,24 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import ci.weget.web.dao.MessageRepository;
 import ci.weget.web.dao.MessagerieRepository;
 import ci.weget.web.dao.PersonnesRepository;
-import ci.weget.web.entites.Message;
-import ci.weget.web.entites.Messagerie;
-import ci.weget.web.entites.Personne;
+import ci.weget.web.entites.messagerie.Expediteur;
+import ci.weget.web.entites.messagerie.Message;
+import ci.weget.web.entites.messagerie.Messagerie;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
@@ -22,42 +27,138 @@ public class MessagerieMetierImpl implements ImessagerieMetier {
 	private MessagerieRepository messagerieRepository;
 	@Autowired
 	private PersonnesRepository personnesRepository;
+
 	@Autowired
-	private MessageRepository messageRepository;
-	@Autowired
-	private JavaMailSender javaMailSender;
+	private JavaMailSender mailSender;
 
 	@Override
 	public Messagerie creer(Messagerie entity) throws InvalideTogetException {
-		Personne p = personnesRepository.getPersonneByid(entity.getPersonne().getId());
+		Personne personne = personnesRepository.findById(entity.getPersonne().getId()).get();
 
 		Messagerie msg = new Messagerie();
+		msg.getMessage().setTypeMessage(false);
+		msg.getMessage().setStatut(true);
 		msg.setExpediteur(entity.getExpediteur());
 		msg.setMessage(entity.getMessage());
-		msg.setPersonne(p);
+		msg.setPersonne(personne);
 		return messagerieRepository.save(msg);
 	}
 
 	@Override
-	public Messagerie modifier(Messagerie entity) throws InvalideTogetException {
+	public Messagerie modifier(Messagerie modif) throws InvalideTogetException {
 
-		return messagerieRepository.save(entity);
+		Optional<Messagerie> messagerie = messagerieRepository.findById(modif.getId());
+
+		if (messagerie.isPresent()) {
+
+			if (messagerie.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+
+		return messagerieRepository.save(modif);
 	}
-   
-	@Autowired
-	public MessagerieMetierImpl(JavaMailSender javaMailSender) {
-	   this.javaMailSender=javaMailSender;
-   }
+
 	@Override
-	public boolean sendEmail(Messagerie  m) throws MailException {
-		SimpleMailMessage mail = new SimpleMailMessage();
-		mail.setFrom(m.getPersonne().getAdresse().getEmail());
-		mail.setTo(m.getExpediteur().getEmail());
-		mail.setSubject(m.getMessage().getSujet());
-		mail.setText(m.getMessage().getContenu());
-		javaMailSender.send(mail);
+	@Async
+	public boolean sendEmail(Messagerie m) throws MailException {
+		MimeMessage email = mailSender.createMimeMessage();
+		String mailExp = m.getPersonne().getAdresse().getEmail();
+		String mailDest = m.getExpediteur().getEmail();
+		String subject = m.getMessage().getSujet();
+		String contenu = m.getMessage().getContenu();
+		System.out.println("****************messssssssssssssage***********" + "##" + email + "##" + mailExp + "##"
+				+ mailDest + "##" + subject + "##" + contenu + m.getMessage().isStatut());
+
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(email, true, "UTF-8");
+
+			helper.setFrom(mailExp);
+			helper.setTo(mailDest);
+			helper.setSubject(subject);
+			helper.setText(contenu, true);
+			mailSender.send(email);
+			Messagerie messagerie = new Messagerie();
+			Message mes = new Message();
+			Personne personne = personnesRepository.findById(m.getPersonne().getId()).get();
+			Expediteur ex = new Expediteur();
+
+			ex.setNom(m.getExpediteur().getNom());
+			ex.setPrenom(m.getExpediteur().getPrenom());
+			ex.setEntreprise(m.getExpediteur().getEntreprise());
+			ex.setEmail(m.getExpediteur().getEmail());
+
+			mes.setContenu(m.getMessage().getContenu());
+			mes.setSujet(m.getMessage().getSujet());
+			mes.setStatut(false);
+			mes.setTypeMessage(true);
+			System.out.println("statut messagerie###########################" + mes);
+
+			mes.setStatut(false);
+
+			messagerie.setExpediteur(ex);
+			messagerie.setMessage(mes);
+			messagerie.setPersonne(personne);
+
+			messagerieRepository.save(messagerie);
+		} catch (MessagingException e) {
+
+			e.printStackTrace();
+		}
+
 		return true;
 	}
+
+	@Override
+	@Async
+	public boolean transfertEmail(Messagerie m) throws MailException {
+		MimeMessage email = mailSender.createMimeMessage();
+		String mailExp = m.getPersonne().getAdresse().getEmail();
+		String mailDest = m.getExpediteur().getEmail();
+		String subject = m.getMessage().getSujet();
+		String contenu = m.getMessage().getContenu();
+		System.out.println("****************messssssssssssssage***********" + "##" + email + "##" + mailExp + "##"
+				+ mailDest + "##" + subject + "##" + contenu + m.getMessage().isStatut());
+
+		try {
+			MimeMessageHelper helper = new MimeMessageHelper(email, true, "UTF-8");
+
+			helper.setFrom(mailExp);
+			helper.setTo(mailDest);
+			helper.setSubject(subject);
+			helper.setText(contenu, true);
+			mailSender.send(email);
+			Messagerie messagerie = new Messagerie();
+			Message mes = new Message();
+			Expediteur ex = new Expediteur();
+			Personne personne = personnesRepository.findById(m.getPersonne().getId()).get();
+			ex.setNom(m.getExpediteur().getNom());
+			ex.setPrenom(m.getExpediteur().getPrenom());
+			ex.setEntreprise(m.getExpediteur().getEntreprise());
+			ex.setEmail(m.getExpediteur().getEmail());
+
+			// defini si le message est un message envoye par mail
+			mes.setContenu(m.getMessage().getContenu());
+			mes.setSujet(m.getMessage().getSujet());
+			mes.setStatut(false);
+			mes.setTypeMessage(true);
+
+			mes.setStatut(false);
+
+			messagerie.setExpediteur(ex);
+			messagerie.setMessage(mes);
+			messagerie.setPersonne(personne);
+			messagerieRepository.save(messagerie);
+		} catch (MessagingException e) {
+
+			e.printStackTrace();
+		}
+
+		return true;
+	}
+
 	@Override
 	public List<Messagerie> findAll() {
 
@@ -67,47 +168,60 @@ public class MessagerieMetierImpl implements ImessagerieMetier {
 	@Override
 	public Messagerie findById(Long id) {
 
-		return messagerieRepository.getOne(id);
+		return messagerieRepository.findById(id).get();
 	}
 
 	@Override
 	public boolean supprimer(Long id) {
-		messageRepository.deleteById(id);
+		messagerieRepository.deleteById(id);
 		return true;
 	}
 
 	@Override
 	public boolean supprimer(List<Messagerie> entites) {
-		
-		return false;
+		messagerieRepository.deleteAll(entites);
+		return true;
 	}
 
 	@Override
 	public boolean existe(Long id) {
-		// TODO Auto-generated method stub
-		return false;
+		return messagerieRepository.existsById(id);
 	}
 
 	@Override
-	public List<Message> findMessagesParPersonneId(Long id) {
+	public List<Messagerie> findMessagerieByIdPersonneId(long id) {
 
-		return messageRepository.findMessagesParPersonneId(id);
+		return messagerieRepository.getMessagrieByIdPersonne(id);
+
 	}
 
 	@Override
-	public Messagerie findMessageById(Long id) {
+	public Messagerie updateStautMessage(Messagerie messagerie) throws InvalideTogetException {
+		Messagerie mes = findById(messagerie.getId());
 
-		return messageRepository.findMessageById(id);
+		mes.getMessage().setStatut(false);
+
+		return messagerieRepository.save(mes);
 	}
 
 	@Override
-	public Messagerie modifierMessage(Messagerie messagerie) throws InvalideTogetException {
-		Messagerie mes = messageRepository.findMessagerieById(messagerie.getId());
-		Message m = mes.getMessage();
-		Message m1= messageRepository.getMessageByid(m.getId());
-		m1.setStatut(false);
-		messageRepository.save(m1);
-        return messagerieRepository.save(mes);
+	public Messagerie findMessagerieByIdMessage(long id) {
+
+		return messagerieRepository.findMessagerieByIdMessage(id);
+	}
+
+	@Override
+	public List<Messagerie> findMessagesEnvoyeParMessagerie() {
+
+		return messagerieRepository.findMessagesEnvoyeParMessagerie();
+
+	}
+
+	@Override
+	public List<Messagerie> findMessagesTransfertParMessagerie() {
+
+		return messagerieRepository.findMessagesTransfererParMessagerie();
+
 	}
 
 }

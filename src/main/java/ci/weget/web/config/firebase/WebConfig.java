@@ -6,7 +6,7 @@ import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import ci.weget.web.entites.Personne;
+import ci.weget.web.entites.personne.Personne;
 
 
 @Configuration

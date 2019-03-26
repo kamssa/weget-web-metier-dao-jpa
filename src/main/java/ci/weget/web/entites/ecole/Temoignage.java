@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.ecole;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -7,6 +7,8 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_Temoignage")
@@ -19,9 +21,9 @@ public class Temoignage extends AbstractEntity {
 	private String contenu;
     private String auteur;
     private String PathPhoto;
-  /*  @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_SousBlock")
-	private SousBlock sousBlock;*/
+    @ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_Ecole")
+	private Ecole ecole;
 	public String getTitre() {
 		return titre;
 	}
@@ -46,12 +48,12 @@ public class Temoignage extends AbstractEntity {
 	public void setPathPhoto(String pathPhoto) {
 		PathPhoto = pathPhoto;
 	}
-	/*public SousBlock getSousBlock() {
-		return sousBlock;
+	public Ecole getEcole() {
+		return ecole;
 	}
-	public void setSousBlock(SousBlock sousBlock) {
-		this.sousBlock = sousBlock;
+	public void setEcole(Ecole ecole) {
+		this.ecole = ecole;
 	}
-    */
+	
     
 }

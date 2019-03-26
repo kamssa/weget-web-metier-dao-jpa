@@ -2,7 +2,6 @@ package ci.weget.web.entites;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -33,10 +32,19 @@ public class AbstractEntity extends DateAudit implements Serializable {
 	
 	// initialisation
 
+	public AbstractEntity() {
+		super();
+	}
+
 	public AbstractEntity build(Long id, Long version) {
 		this.id = id;
 		this.version = version;
 		return this;
+	}
+
+	public AbstractEntity(Long id) {
+		super();
+		this.id = id;
 	}
 
 	@Override

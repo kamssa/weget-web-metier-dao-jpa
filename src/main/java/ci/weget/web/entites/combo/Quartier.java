@@ -10,7 +10,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_Quartier")
+@Table(name = "T_ComboQuartier")
 public class Quartier extends AbstractEntity {
 
 private static final long serialVersionUID = 1L;

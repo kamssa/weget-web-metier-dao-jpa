@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_Langue")
+@Table(name = "T_ComboLangue")
 public class Langue extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;

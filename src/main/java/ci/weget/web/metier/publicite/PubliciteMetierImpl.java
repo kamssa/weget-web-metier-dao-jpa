@@ -56,4 +56,16 @@ public class PubliciteMetierImpl implements IPubliciteMetier{
 		return false;
 	}
 
+	@Override
+	public List<Publicite> findAllPubliciteParIdPosition(Long id) {
+		// TODO Auto-generated method stub
+		return publiciteRepository.findAllPubliciteParIdPosition(id);
+	}
+
+	@Override
+	public List<Publicite> findAllPubliciteParPage(String page) {
+		// TODO Auto-generated method stub
+		return publiciteRepository.findAllPubliciteParPage(page);
+	}
+
 }

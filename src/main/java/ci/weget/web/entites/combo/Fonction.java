@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_Fonction")
+@Table(name = "T_ComboFonction")
 public class Fonction extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;

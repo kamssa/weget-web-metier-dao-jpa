@@ -1,10 +1,23 @@
 package ci.weget.web.controller;
 
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,213 +25,109 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 
-import ci.weget.web.entites.Personne;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.personne.Administrateur;
+import ci.weget.web.entites.personne.Membre;
+import ci.weget.web.entites.personne.Personne;
+import ci.weget.web.entites.personne.Role;
+import ci.weget.web.entites.personne.RoleName;
 import ci.weget.web.exception.InvalideTogetException;
+import ci.weget.web.listener.OnRegistrationCompleteEvent;
 import ci.weget.web.metier.IAdminMetier;
 import ci.weget.web.metier.IMembreMetier;
+import ci.weget.web.metier.IRoleMetier;
+import ci.weget.web.modeles.ApiResponse;
+import ci.weget.web.modeles.JwtAuthenticationResponse;
+import ci.weget.web.modeles.LoginRequest;
 import ci.weget.web.modeles.Reponse;
-import ci.weget.web.security.UserRoles;
+import ci.weget.web.modeles.ReponsePaiement;
+import ci.weget.web.security.JwtTokenProvider;
 import ci.weget.web.utilitaires.Static;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin
 public class AdminController {
 
 	@Autowired
 	private IAdminMetier adminMetier;
 	@Autowired
-	private IMembreMetier membreMetier;
+	AuthenticationManager authenticationManager;
+	@Autowired
+	JwtTokenProvider tokenProvider;
+	@Autowired
+	private IRoleMetier roleMetier;
 
 	@Autowired
 	private ObjectMapper jsonMapper;
 
-	//////////// chemin ou sera sauvegarder les photos
-	//////////// ////////////////////////////////////////
-	@Value("${dir.images}")
-	private String togetImage;
 
-	////////////////////////////////////////////////////////////////
-	//////////////// Rechercher une personne a partir de son identifiant///////////
+    // athentifer un administrateur
+	  @PostMapping("/signin")
+	  public String authenticateUser(@Valid @RequestBody LoginRequest loginRequest) throws JsonProcessingException {
+		Reponse<ResponseEntity<?>> reponse;
+		ReponsePaiement<ResponseEntity<?>, String> response;
+		Authentication authentication = authenticationManager.authenticate(
 
-	private Reponse<Personne> getPersonneById(final Long id) {
-		Personne personne = null;
-		try {
-			personne = adminMetier.findById(id);
-		} catch (RuntimeException e) {
-			new Reponse<Personne>(1, Static.getErreursForException(e), null);
-		}
-		if (personne == null) {
-			List<String> messages = new ArrayList<String>();
-			messages.add(String.format("La personne n'exste pas", id));
-			return new Reponse<Personne>(2, messages, null);
-		}
-		return new Reponse<Personne>(0, null, personne);
+				new UsernamePasswordAuthenticationToken(loginRequest.getLoginOrTelephone(),
+						loginRequest.getPassword()));
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+
+		String jwt = tokenProvider.generateToken(authentication);
+		//String login = tokenProvider.getUserPrincipal().getLogin();
+		//String login = tokenProvider.getPersonne().getLogin();
+
+		reponse = new Reponse<ResponseEntity<?>>(0, null, ResponseEntity.ok(new JwtAuthenticationResponse(jwt)));
+		response = new ReponsePaiement<ResponseEntity<?>, String>(0, null,
+				ResponseEntity.ok(new JwtAuthenticationResponse(jwt)));
+		return jsonMapper.writeValueAsString(response);
 
 	}
 
-	////////////////////////////////////////////////////////////////////////////////////////
-	//////////// rechercher une personne par son
-	//////////////////////////////////////////////////////////////////////////////////////// login/////////////////////////////////////
-	private Reponse<Personne> getPersonneByLogin(String login) {
-		Personne personne = null;
-		try {
-			personne = adminMetier.findPersonnesByLogin(login);
-		} catch (RuntimeException e) {
-			new Reponse<Personne>(1, Static.getErreursForException(e), null);
-		}
-		if (personne == null) {
-			List<String> messages = new ArrayList<>();
-			messages.add(String.format("la personne n'exixte pas", login));
-			return new Reponse<Personne>(2, messages, null);
-		}
-		return new Reponse<Personne>(0, null, personne);
-	}
+	
+	@PostMapping("/signup")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public String registerUser(@Valid @RequestBody Personne signUpRequest,
+			@RequestParam(value = "action") String action, BindingResult result1, HttpServletRequest request,
+			Errors errors) throws Exception, FirebaseAuthException {
 
-	////////////////////////////////////////////////////////////////////////////////////////////
-	/////////////////// enregistrer une personne dans la base de
-	//////////////////////////////////////////////////////////////////////////////////////////// donnee////////////////////
-
-	@PostMapping("/admin")
-	public String creer(@RequestBody Personne entite) throws JsonProcessingException {
-		Reponse<Personne> reponse;
-		try {
-			Personne p1 = adminMetier.creer(entite);
-			List<String> messages = new ArrayList<>();
-			messages.add(String.format("%s à été créer avec succes", p1.getNomComplet()));
-			reponse = new Reponse<Personne>(0, messages, p1);
-
-		} catch (InvalideTogetException e) {
-
-			reponse = new Reponse<Personne>(1, Static.getErreursForException(e), null);
-		}
+		Reponse<ResponseEntity<?>> reponse = null;
+		
+		UserRecord record = adminMetier.createUser(signUpRequest);
+		List<String> messages = new ArrayList<>();
+		messages.add(String.format("%s firebase a ete creer avec succee", record.getUid()));
+		Role userRole = roleMetier.findByRoleName(RoleName.MEMBRE);
+		signUpRequest.setRoles(Collections.singleton(userRole));
+		
+		Membre registered = (Membre) adminMetier.creer(signUpRequest);
+		
 		return jsonMapper.writeValueAsString(reponse);
 	}
 
-	@GetMapping("/admin/{type}")
-	public String findAllTypePersonne(@PathVariable("type") String type) throws JsonProcessingException {
+	@GetMapping("/admin")
+	public String findAll() throws JsonProcessingException {
 		Reponse<List<Personne>> reponse;
-		reponse = new Reponse<List<Personne>>(0, null, adminMetier.personneALL(type));
-
-		return jsonMapper.writeValueAsString(reponse);
-	}
-
-	@PutMapping("/admin")
-	public String modifier(Personne modif) throws JsonProcessingException {
-		Reponse<Personne> reponsePersModif = null;
-		Reponse<Personne> reponse = null;
-
-		// on recupere la personne a modifier
-		reponsePersModif = getPersonneById(modif.getId());
-		if (reponsePersModif.getStatus() == 0) {
-			try {
-				Personne p2 = adminMetier.modifier(modif);
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s %s a modifier avec succes", p2.getNom(), p2.getPrenom()));
-				reponse = new Reponse<Personne>(0, messages, p2);
-			} catch (InvalideTogetException e) {
-
-				reponse = new Reponse<Personne>(1, Static.getErreursForException(e), null);
-			}
-
+		List<Personne> personnes= adminMetier.findAll();
+		if (!personnes.isEmpty()) {
+			reponse = new Reponse<List<Personne>>(0, null, personnes);
 		} else {
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("La personne n'existe pas"));
-			reponse = new Reponse<Personne>(0, messages, null);
-		}
-
-		return jsonMapper.writeValueAsString(reponse);
-	}
-
-	@GetMapping("/personnesparId/{id}")
-	public String chercherPersonneParId(@PathVariable Long id) throws JsonProcessingException {
-		// Annotation @PathVariable permet de recuperer le paremettre dans URI
-		Reponse<Personne> reponse = null;
-
-		reponse = getPersonneById(id);
-
-		return jsonMapper.writeValueAsString(reponse);
-
-	}
-
-	// supprimer une personne
-	@DeleteMapping("/admin/{id}")
-	public String supprimer(@PathVariable("id") Long id) throws JsonProcessingException {
-
-		Reponse<Boolean> reponse = null;
-		boolean erreur = false;
-		Personne p = null;
-		if (!erreur) {
-			Reponse<Personne> responseSup = getPersonneById(id);
-			p = responseSup.getBody();
-			if (responseSup.getStatus() != 0) {
-				reponse = new Reponse<>(responseSup.getStatus(), responseSup.getMessages(), null);
-				erreur = true;
-
-			}
-		}
-		if (!erreur) {
-			// suppression
-			try {
-
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s  %s a ete supprime", p.getId(), p.getNom(), p.getPrenom()));
-
-				reponse = new Reponse<Boolean>(0, messages, adminMetier.supprimer(id));
-
-			} catch (RuntimeException e1) {
-				reponse = new Reponse<>(3, Static.getErreursForException(e1), null);
-			}
+			messages.add("Pas d'abonnés enregistrées");
+			reponse = new Reponse<List<Personne>>(1, messages, new ArrayList<>());
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
-	// supprimer un membre
-		@DeleteMapping("/adminMembres/{id}")
-		public String supprimerMemmbre(@PathVariable("id") Long id) throws JsonProcessingException {
 
-			Reponse<Boolean> reponse = null;
-			boolean erreur = false;
-			Personne p = null;
-			if (!erreur) {
-				Reponse<Personne> responseSup = getPersonneById(id);
-				p = responseSup.getBody();
-				if (responseSup.getStatus() != 0) {
-					reponse = new Reponse<>(responseSup.getStatus(), responseSup.getMessages(), null);
-					erreur = true;
-
-				}
-			}
-			if (!erreur) {
-				// suppression
-				try {
-
-					List<String> messages = new ArrayList<>();
-					messages.add(String.format("%s  %s a ete supprime", p.getId(), p.getNom(), p.getPrenom()));
-
-					reponse = new Reponse<Boolean>(0, messages, membreMetier.supprimer(id));
-
-				} catch (RuntimeException e1) {
-					reponse = new Reponse<>(3, Static.getErreursForException(e1), null);
-				}
-			}
-			return jsonMapper.writeValueAsString(reponse);
-		}
-
-////////////les roles dúne personne par id////////////////////////////////////
-	/*@GetMapping("/roleParPersonne/{id}")
-	public String getRoleParPersonneId(@PathVariable Long id) throws JsonProcessingException, InvalideTogetException {
-		Reponse<List<UserRoles>> reponse;
-		try {
-			List<UserRoles> ur = adminMetier.roleParPersonneId(id);
-			reponse = new Reponse<List<UserRoles>>(0, null, ur);
-		} catch (Exception e) {
-			reponse = new Reponse<List<UserRoles>>(1, Static.getErreursForException(e), null);
-		}
-		return jsonMapper.writeValueAsString(reponse);
-
-	}*/
+	
+	
+	
 }

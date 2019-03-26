@@ -1,11 +1,9 @@
 package ci.weget.web.security;
 
 import java.io.IOException;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
@@ -21,7 +19,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 			AuthenticationException authException) throws IOException, ServletException {
 		logger.error("Reponse de L'erreur . Message - {}", authException.getMessage());
 		response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                "Desole, Vous n'etes pas authorise a accede a cette ressource.");
+				authException.getMessage());
 		
 	}
 

@@ -55,4 +55,10 @@ private PositionRepository positionRepository;
 		return false;
 	}
 
+	@Override
+	public Position positionParlibelle(String libelle) {
+		// TODO Auto-generated method stub
+		return positionRepository.findAllPositionParNom(libelle);
+	}
+
 }

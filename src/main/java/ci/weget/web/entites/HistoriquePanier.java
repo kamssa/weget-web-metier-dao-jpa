@@ -9,6 +9,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.personne.Personne;
+
 @Entity
 @Table(name = "T_HistoriquePanier")
 public class HistoriquePanier  extends AbstractEntity{
@@ -20,7 +23,7 @@ public class HistoriquePanier  extends AbstractEntity{
 	private double montant;
 	@OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Block",unique=true)
-	private Block block;
+	private Espace block;
 
 	@OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Personne")
@@ -31,7 +34,7 @@ public class HistoriquePanier  extends AbstractEntity{
 		// TODO Auto-generated constructor stub
 	}
 
-	public HistoriquePanier(LocalDateTime date, double quantite, double montant, Block block, Personne personne) {
+	public HistoriquePanier(LocalDateTime date, double quantite, double montant, Espace block, Personne personne) {
 		super();
 		this.date = date;
 		this.quantite = quantite;
@@ -64,11 +67,11 @@ public class HistoriquePanier  extends AbstractEntity{
 		this.montant = montant;
 	}
 
-	public Block getBlock() {
+	public Espace getBlock() {
 		return block;
 	}
 
-	public void setBlock(Block block) {
+	public void setBlock(Espace block) {
 		this.block = block;
 	}
 

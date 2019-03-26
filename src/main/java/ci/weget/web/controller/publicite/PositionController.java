@@ -121,6 +121,22 @@ public class PositionController {
 			return jsonMapper.writeValueAsString(reponse);
 
 		}
+		// recuperer  le pays par id
+				@GetMapping("/positionParLibelle/{libelle}")
+				public String findPositionParLibelle(@PathVariable String libelle) throws JsonProcessingException, InvalideTogetException {
+					Reponse<Position> reponse;
+					Position p=null;
+					try {
+						
+						p= positionMetier.positionParlibelle(libelle);
+						
+						reponse = new Reponse<Position>(0, null, p);
+					} catch (Exception e) {
+						reponse = new Reponse<Position>(1, Static.getErreursForException(e), null);
+					}
+					return jsonMapper.writeValueAsString(reponse);
+
+				}
 
 	// recuperer touts les pays
 	@GetMapping("/position")

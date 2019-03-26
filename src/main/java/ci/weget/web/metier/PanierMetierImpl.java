@@ -1,6 +1,5 @@
 package ci.weget.web.metier;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -9,75 +8,52 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ci.weget.web.dao.BlocksRepository;
-import ci.weget.web.dao.AbonnementRepository;
 import ci.weget.web.dao.PanierRepository;
-import ci.weget.web.dao.PersonnesRepository;
-import ci.weget.web.dao.DetailAbonnementRepository;
-import ci.weget.web.dao.TarifRepository;
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Abonnement;
-import ci.weget.web.entites.Membre;
-import ci.weget.web.entites.Panier;
-import ci.weget.web.entites.Personne;
-import ci.weget.web.entites.DetailAbonnement;
-import ci.weget.web.entites.Tarif;
+import ci.weget.web.entites.commande.Panier;
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.espace.Tarif;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
-import ci.weget.web.modeles.Reponse;
 
 @Service
 public class PanierMetierImpl implements IPanierMetier {
 
 	private Map<Long, Panier> items = new HashMap<>();
-	@Autowired
-	private TarifRepository tarifRepository;
+
 	@Autowired
 	private PanierRepository panierRepository;
-	@Autowired
-	private PersonnesRepository personnesRepository;
-	@Autowired
-	private AbonnementRepository detailBlocksRepository;
-	@Autowired
-	private BlocksRepository blocksRepository;
-	@Autowired
-	private DetailAbonnementRepository sousBlocksRepository;
 
 	@Override
-	public boolean ajoutLignePanier(Tarif tarif, Block block, Personne personne, double quantite, double montant) {
-		
+	public boolean ajoutLignePanier(Tarif tarif,Espace espace, Personne personne, double quantite, double montant,
+			boolean abonneSpecial, double nbreJours) {
 		Panier p = new Panier();
-		 List<Panier> paniers = panierRepository.findAllPanierParPersonneId(personne.getId()) ; 
-         for (Panier pa : paniers) {
- 			// on a le block du panier de la personne
- 			if (pa.getBlock().getId() == block.getId()) {
- 			throw new RuntimeException("ce block existe deja dans votre panier");
- 			}
- 		}
-       /*  // creation d'un abonne apres paiement
-        * definir le role de abonne a abonne
-        Membre membre = personnesRepository.findByLogin(personne.getLogin());
- 		block = blocksRepository.findByLibelle(block.getLibelle());
- 		DetailBlock db = new DetailBlock();
- 		db.setBlock(block);
- 		db.setMembre(membre);
- 		db.setNombreVue(0);
- 		db.setPathPhoto(null);
- 		detailBlocksRepository.save(db);
-         
-     if (block.getTypeBlock()=="ecole") {
-		SousBlock sb= new SousBlock();
-		sb.setIdBlock(block.getId());
-		sb.setDetailBlock(db);
-		sousBlocksRepository.save(sb);
-			}*/
-		p.setBlock(block);
-		p.setTarif(tarif);
-		p.setPersonne(personne);
-		p.setQuantite(quantite);
-		p.setMontant(montant);
+		List<Panier> paniers = panierRepository.findPaniersByPersonne(personne.getId());
+		for (Panier pa : paniers) {
+			// on a le block du panier de la personne
+			if (pa.getEspace().getId()==espace.getId()) {
+				throw new RuntimeException("Cet espace existe deja dans votre panier");
+			}
+		}
+		if (abonneSpecial == false) {
 
-		System.out.println("le panier" + p);
+			p.setTarif(tarif);
+			p.setPersonne(personne);
+			p.setQuantite(quantite);
+			p.setMontant(montant);
+			p.setAbonneSpecial(false);
+
+		} else if (abonneSpecial == true) {
+
+			p.setTarif(tarif);
+			p.setPersonne(personne);
+			p.setQuantite(quantite);
+			p.setMontant(montant);
+			p.setAbonneSpecial(true);
+			p.setNbreJours(nbreJours);
+		}
+
 		panierRepository.save(p);
+
 		return true;
 	}
 
@@ -88,32 +64,45 @@ public class PanierMetierImpl implements IPanierMetier {
 	}
 
 	@Override
-	public boolean modifLignePanier(Long id,Tarif tarif, Block block, Personne personne, double quantite, double montant) {
-		
-		 Panier p = panierRepository.findPanierById(id);
-        
-         
-         p.setBlock(block);
-		p.setTarif(tarif);
-		p.setPersonne(personne);
-		p.setQuantite(quantite);
-		p.setMontant(montant);
+	public boolean modifLignePanier(Long id, Tarif tarif, Personne personne, double quantite, double montant,
+			boolean abonneSpecial, double nbreJours) {
 
-		System.out.println("le panier" + p);
+		Panier p = panierRepository.findById(id).get();
+
+		if (abonneSpecial == false) {
+
+			p.setTarif(tarif);
+			p.setPersonne(personne);
+			p.setQuantite(quantite);
+			p.setMontant(montant);
+			p.setAbonneSpecial(false);
+		}
+		if (abonneSpecial == true) {
+
+			p.setTarif(tarif);
+			p.setPersonne(personne);
+			p.setQuantite(quantite);
+			p.setMontant(montant);
+			p.setAbonneSpecial(true);
+			p.setNbreJours(nbreJours);
+
+		}
+
 		panierRepository.save(p);
+
 		return true;
 	}
 
 	@Override
 	public List<Panier> findAll() {
 
-		return panierRepository.findAllPanier();
+		return panierRepository.findAll();
 	}
 
 	@Override
 	public Panier findById(Long id) {
 
-		return panierRepository.findPanierById(id);
+		return panierRepository.findById(id).get();
 	}
 
 	@Override
@@ -132,7 +121,6 @@ public class PanierMetierImpl implements IPanierMetier {
 
 	@Override
 	public boolean existe(Long id) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -156,14 +144,14 @@ public class PanierMetierImpl implements IPanierMetier {
 	}
 
 	@Override
-	public List<Panier> LesPanierDeLaPersonne(long idPersonne) {
+	public List<Panier> getPanierByIdPersonne(long idPersonne) {
 
-		return panierRepository.findAllPanierParPersonneId(idPersonne);
+		return panierRepository.findPaniersByPersonne(idPersonne);
 	}
 
 	@Override
 	public Panier modifier(Panier entity) throws InvalideTogetException {
-		
+
 		return null;
 	}
 

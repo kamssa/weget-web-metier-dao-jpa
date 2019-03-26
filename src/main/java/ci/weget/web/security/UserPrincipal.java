@@ -10,53 +10,49 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import ci.weget.web.entites.Personne;
+import ci.weget.web.entites.personne.Personne;
 
 public class UserPrincipal implements UserDetails {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private Long id;
+    private String login;
+	private String telephone;
 
-	 private String login;
-
-	
 	@JsonIgnore
-    private String password;
+	private String password;
 	private Collection<? extends GrantedAuthority> authorities;
-	
-	
-	
+
 	public UserPrincipal() {
 		super();
-		
+
 	}
 
-	public UserPrincipal(Long id, String login, String password, Collection<? extends GrantedAuthority> authorities) {
+	public UserPrincipal(Long id, String login,String telephone, String password, Collection<? extends GrantedAuthority> authorities) {
 		super();
 		this.id = id;
 		this.login = login;
+		this.telephone = telephone;
 		this.password = password;
 		this.authorities = authorities;
 	}
+
 	public static UserPrincipal create(Personne user) {
-        List<GrantedAuthority> authorities = user.getRoles().stream().map(role ->
-                new SimpleGrantedAuthority(role.getName().name())
-        ).collect(Collectors.toList());
+		List<GrantedAuthority> authorities = user.getRoles().stream()
+				.map(role -> new SimpleGrantedAuthority(role.getName().name())).collect(Collectors.toList());
 
-        return new UserPrincipal(
-                user.getId(),
-                user.getLogin(),
-                user.getPassword(),
-                authorities
-        );
-    }
-
-	
+		return new UserPrincipal(
+				user.getId(), 
+				user.getLogin(),
+				user.getTelephone(), 
+				user.getPassword(), 
+				authorities);
+	}
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-	
+
 		return authorities;
 	}
 
@@ -76,13 +72,21 @@ public class UserPrincipal implements UserDetails {
 
 	@Override
 	public String getUsername() {
-		
+
 		return login;
+	}
+
+	public String getLogin() {
+		return login;
+	}
+
+	public String getTelephone() {
+		return telephone;
 	}
 
 	@Override
 	public boolean isAccountNonExpired() {
-		// TODO Auto-generated method stub
+		
 		return true;
 	}
 
@@ -147,5 +151,10 @@ public class UserPrincipal implements UserDetails {
 		return true;
 	}
 
-	
+	@Override
+	public String toString() {
+		return "UserPrincipal [id=" + id + ", login=" + login + ", telephone=" + telephone + ", password=" + password
+				+ ", authorities=" + authorities + "]";
+	}
+
 }

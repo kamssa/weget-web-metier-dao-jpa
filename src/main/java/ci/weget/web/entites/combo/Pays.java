@@ -6,7 +6,7 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_Pays")
+@Table(name = "T_ComboPays")
 public class Pays extends AbstractEntity {
 
 	private static final long serialVersionUID = 1L;

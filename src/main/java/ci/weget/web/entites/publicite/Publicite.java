@@ -3,6 +3,7 @@ package ci.weget.web.entites.publicite;
 import java.time.LocalDateTime;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -10,47 +11,53 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import ci.weget.web.entites.AbstractEntity;
-import ci.weget.web.entites.Entreprise;
-import ci.weget.web.entites.Membre;
+import ci.weget.web.entites.personne.Entreprise;
+import ci.weget.web.entites.personne.Membre;
 
 @Entity
-@Table(name="t_Publicite")
+@Table(name = "t_Publicite")
 public class Publicite extends AbstractEntity {
 
-	
 	private static final long serialVersionUID = 1L;
 	private String titre;
+	@Column(columnDefinition="TEXT")
 	private String contenu;
+	private double prix;
+	private int dureeTarif;
+	private String typeDuree;
+	private boolean free;
+	private boolean pubSpecial;
 	private String pathPhoto;
 	private LocalDateTime date;
 	private String pathVideo;
-	
-	
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_Position", insertable = false, updatable = false)
+	private String page;
+	private String lienPub;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "id_Position")
 	private Position position;
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_Entreprise", insertable = false, updatable = false)
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "id_Entreprise")
 	private Entreprise entreprise;
 
-	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JoinColumn(name = "id_Entreprise", insertable = false, updatable = false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "id_Membre")
 	private Membre membre;
-	
+
 	public Publicite() {
 		super();
-		
+
 	}
 
 	public Publicite(String titre, String contenu, String pathPhoto, LocalDateTime date, String pathVideo,
-			 Entreprise entreprise, Membre membre) {
+			Entreprise entreprise, Membre membre) {
 		super();
 		this.titre = titre;
 		this.contenu = contenu;
 		this.pathPhoto = pathPhoto;
 		this.date = date;
 		this.pathVideo = pathVideo;
-		
+
 		this.entreprise = entreprise;
 		this.membre = membre;
 	}
@@ -95,8 +102,6 @@ public class Publicite extends AbstractEntity {
 		this.pathVideo = pathVideo;
 	}
 
-	
-
 	public Entreprise getEntreprise() {
 		return entreprise;
 	}
@@ -119,6 +124,64 @@ public class Publicite extends AbstractEntity {
 
 	public void setPosition(Position position) {
 		this.position = position;
+	}
+
+	public double getPrix() {
+		return prix;
+	}
+
+	public void setPrix(double prix) {
+		this.prix = prix;
+	}
+
+	public int getDureeTarif() {
+		return dureeTarif;
+	}
+
+	public void setDureeTarif(int dureeTarif) {
+		this.dureeTarif = dureeTarif;
+	}
+
+	public String getTypeDuree() {
+		return typeDuree;
+	}
+
+	public void setTypeDuree(String typeDuree) {
+		this.typeDuree = typeDuree;
+	}
+
+	
+
+	public String getPage() {
+		return page;
+	}
+
+	public void setPage(String page) {
+		this.page = page;
+	}
+
+	public boolean isFree() {
+		return free;
+	}
+
+	public void setFree(boolean free) {
+		this.free = free;
+	}
+
+	public boolean isPubSpecial() {
+		return pubSpecial;
+	}
+
+	public void setPubSpecial(boolean pubSpecial) {
+		this.pubSpecial = pubSpecial;
+	}
+
+	public String getLienPub() {
+		return lienPub;
+	}
+
+	public void setLienPub(String lienPub) {
+		this.lienPub = lienPub;
 	}
 
 	@Override
@@ -182,6 +245,4 @@ public class Publicite extends AbstractEntity {
 		return true;
 	}
 
-	
-	
 }

@@ -1,7 +1,9 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.personne;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name="T_Telephone")

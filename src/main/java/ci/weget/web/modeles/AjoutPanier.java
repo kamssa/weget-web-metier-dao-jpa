@@ -1,7 +1,6 @@
 package ci.weget.web.modeles;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class AjoutPanier {
 
@@ -10,6 +9,9 @@ public class AjoutPanier {
 	private Double total;
 	private long idMembre;
 	private long idTarif;
+	private boolean abonneSpecial;
+	private double nbresJours;
+	private long idbonnement;
 
 
 	public LocalDateTime getDate() {
@@ -50,6 +52,30 @@ public class AjoutPanier {
 
 	public void setIdTarif(long idTarif) {
 		this.idTarif = idTarif;
+	}
+
+	public boolean isAbonneSpecial() {
+		return abonneSpecial;
+	}
+
+	public void setAbonneSpecial(boolean abonneSpecial) {
+		this.abonneSpecial = abonneSpecial;
+	}
+
+	public double getNbresJours() {
+		return nbresJours;
+	}
+
+	public void setNbresJours(double nbresJours) {
+		this.nbresJours = nbresJours;
+	}
+
+	public long getIdbonnement() {
+		return idbonnement;
+	}
+
+	public void setIdbonnement(long idbonnement) {
+		this.idbonnement = idbonnement;
 	}
 
 }

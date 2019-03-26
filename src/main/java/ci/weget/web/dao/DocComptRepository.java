@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
-import ci.weget.web.entites.Block;
 import ci.weget.web.entites.competences.DocCompetence;
+import ci.weget.web.entites.espace.Espace;
 
+@Repository
 public interface DocComptRepository extends JpaRepository<DocCompetence, Long> {
 	
 

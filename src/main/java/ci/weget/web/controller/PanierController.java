@@ -16,18 +16,20 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Panier;
-import ci.weget.web.entites.Personne;
-import ci.weget.web.entites.Tarif;
-import ci.weget.web.metier.IBlocksMetier;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.commande.Panier;
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.espace.Tarif;
+import ci.weget.web.entites.personne.Personne;
+import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.IAbonnementMetier;
+import ci.weget.web.metier.IEspaceMetier;
+import ci.weget.web.metier.ILigneCommandeMetier;
 import ci.weget.web.metier.IMembreMetier;
 import ci.weget.web.metier.IPanierMetier;
 import ci.weget.web.metier.ITarifMetier;
+import ci.weget.web.modele.metier.ICreeAbonneGratuit;
 import ci.weget.web.modeles.AjoutPanier;
-import ci.weget.web.modeles.ICreeAbonne;
-import ci.weget.web.modeles.ICreeAbonneGratuit;
 import ci.weget.web.modeles.ModifPanier;
 import ci.weget.web.modeles.Reponse;
 import ci.weget.web.utilitaires.Static;
@@ -43,11 +45,13 @@ public class PanierController {
 	@Autowired
 	private IMembreMetier membreMetier;
 	@Autowired
-	private IBlocksMetier blocksMetier;
+	private IEspaceMetier espaceMetier;
 	@Autowired
-	private IAbonnementMetier detailBlocksMetier;
+	private ILigneCommandeMetier ligneCommandeMetier;
 	@Autowired
 	private ICreeAbonneGratuit creeAbonneGratuit;
+	@Autowired
+	private IAbonnementMetier abonnementMetier;
 	@Autowired
 	private ObjectMapper jsonMapper;
 
@@ -88,10 +92,12 @@ public class PanierController {
 	private Reponse<Personne> getMembreByLogin(final String login) {
 		Personne personne = null;
 		try {
-			personne = membreMetier.findByLogin(login);
-
+			personne =	 membreMetier.findByLogin(login);
 		} catch (RuntimeException e) {
 			new Reponse<Personne>(1, Static.getErreursForException(e), null);
+		} catch (InvalideTogetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		if (personne == null) {
 			List<String> messages = new ArrayList<String>();
@@ -103,22 +109,22 @@ public class PanierController {
 	}
 
 	// recuprer le block a partir de son identifiant
-	private Reponse<Block> getBlock(final long id) {
+	private Reponse<Espace> getEspace(final long id) {
 		// on récupère le block
-		Block block = null;
+		Espace block = null;
 		try {
-			block = blocksMetier.findById(id);
+			block = espaceMetier.findById(id);
 		} catch (Exception e1) {
-			return new Reponse<Block>(1, Static.getErreursForException(e1), null);
+			return new Reponse<Espace>(1, Static.getErreursForException(e1), null);
 		}
 		// block existant ?
 		if (block == null) {
 			List<String> messages = new ArrayList<String>();
 			messages.add(String.format("Le block n'exste pas", id));
-			return new Reponse<Block>(2, messages, null);
+			return new Reponse<Espace>(2, messages, null);
 		}
 		// ok
-		return new Reponse<Block>(0, null, block);
+		return new Reponse<Espace>(0, null, block);
 	}
 
 	// recuprer le Tarif a partir de son identifiant
@@ -143,8 +149,61 @@ public class PanierController {
 	@PostMapping("/panier")
 	public String creer(@RequestBody AjoutPanier post) throws JsonProcessingException {
 
+
 		Reponse<Boolean> reponse = null;
+		Double total=null;
 		
+		
+		// on recupere le reponse tarif
+		Reponse<Tarif> reponseTarif = getTarif(post.getIdTarif());
+		// on extrait le tarif
+		Tarif tarif = (Tarif) reponseTarif.getBody();
+		// on récupère  reponse block
+		Reponse<Espace> reponseEspace = getEspace(tarif.getIdEspace());
+		Espace espace = reponseEspace.getBody();
+		Reponse<Personne> reponsePersonne = getMembreById(post.getIdMembre());
+    	Personne personne = (Personne) reponsePersonne.getBody();
+    	boolean abonneSpecial= post.isAbonneSpecial();
+        
+		Double quantite=null;
+        quantite=post.getQuantite();
+        double  nbreJours=post.getNbresJours();
+        if (abonneSpecial==false) {
+    		total = tarif.getPrix()* quantite;
+
+		}if (abonneSpecial==true) {
+    		total = (tarif.getPrix()+(tarif.getPrixSpecial()*post.getNbresJours()))* quantite;
+
+		} 
+          try {
+			boolean boo = panierMetier.ajoutLignePanier(tarif,espace,personne, quantite, total,abonneSpecial,nbreJours);
+			boolean bool = ligneCommandeMetier.ajoutLigneCommande(personne,espace, quantite, total,abonneSpecial,nbreJours);
+
+			List<String> messages = new ArrayList<>();
+			messages.add(String.format("element ajouter au panier avec succes"));
+			reponse = new Reponse<Boolean>(0, messages, boo);
+			
+		} catch (Exception e) {
+
+			reponse = new Reponse<Boolean>(1, Static.getErreursForException(e), null);
+		}
+
+        
+
+		// on récupère la personne reponse personne
+
+       // on récupère le tarif reponse tarif
+
+		return jsonMapper.writeValueAsString(reponse);
+	}
+	/*@PostMapping("/panierReabonne")
+	public String reabonnement(@RequestBody AjoutPanier post) throws JsonProcessingException {
+
+
+		Reponse<Boolean> reponse = null;
+		Double total=null;
+		
+		Abonnement ab=abonnementMetier.findById(post.getIdbonnement());
 		// on recupere le reponse tarif
 		Reponse<Tarif> reponseTarif = getTarif(post.getIdTarif());
 		// on extrait le tarif
@@ -152,37 +211,49 @@ public class PanierController {
 		// on récupère  reponse block
 		Reponse<Block> reponseBlock = getBlock(tarif.getBlock().getId());
 		Block block = (Block) reponseBlock.getBody();
-		
-
-		// on récupère la personne reponse personne
-
 		Reponse<Personne> reponsePersonne = getMembreById(post.getIdMembre());
+    	Personne personne = (Personne) reponsePersonne.getBody();
+    	boolean abonneSpecial= post.isAbonneSpecial();
+        
+		Double quantite=null;
+        quantite=post.getQuantite();
+        double  nbreJours=post.getNbresJours();
+        if (abonneSpecial==false) {
+    		total = tarif.getPrix()* quantite;
 
-		Personne personne = (Personne) reponsePersonne.getBody();
-		Double quantite = post.getQuantite();
-		Double total = tarif.getPrix() * post.getQuantite();
-		try {
-			boolean boo = panierMetier.ajoutLignePanier(tarif, block, personne, quantite, total);
+		}if (abonneSpecial==true) {
+    		total = (tarif.getPrix()+(tarif.getPrixSpecial()*post.getNbresJours()))* quantite;
+
+		} 
+          try {
+			boolean boo = panierMetier.ajoutLignePanier(tarif, block, personne, quantite, total,abonneSpecial,nbreJours);
+			boolean bool = ligneCommandeMetier.ajoutLigneCommande(block, personne, quantite, total,abonneSpecial,nbreJours);
+
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("element ajouter au panier avec succes", true));
-			reponse = new Reponse<Boolean>(0, messages, true);
+			messages.add(String.format("element ajouter au panier avec succes"));
+			reponse = new Reponse<Boolean>(0, messages, boo);
 			
 		} catch (Exception e) {
 
 			reponse = new Reponse<Boolean>(1, Static.getErreursForException(e), null);
 		}
 
-		// on récupère le tarif reponse tarif
+        
+
+		// on récupère la personne reponse personne
+
+       // on récupère le tarif reponse tarif
 
 		return jsonMapper.writeValueAsString(reponse);
-	}
-
+	}*/
 	// modif d'un panier dans la base de donnee
-	@PutMapping("/panier")
+	/*@PutMapping("/panier")
 	public String modfierUnPanier(@RequestBody ModifPanier modif) throws JsonProcessingException {
 
 		Reponse<Boolean> reponse;
 		Reponse<Panier> reponsePanier;
+		Double total=null;
+		Double totalSpecial=null;
 
 		long idTarif = modif.getIdTarif();
 		long idMembre = modif.getIdMembre();
@@ -200,18 +271,23 @@ public class PanierController {
 		// on recupere le block
 		Personne personne = (Personne) reponsePersonne.getBody();
 		Double quantite = modif.getQuantite();
-		Double total = tarif.getPrix() * modif.getQuantite();
+    	boolean abonneSpecial= modif.isAbonneSpecial();
+    	double nbreJours=modif.getNbreJours();
+
+		if (abonneSpecial==false) {
+		 total = tarif.getPrix() * modif.getQuantite();
+
+		}if(abonneSpecial==true) {
+    		total = (tarif.getPrix()+(tarif.getPrixSpecial())*modif.getNbreJours())* quantite;
+	
+		}
 
 		try {
-			// reponsePanier= getPanierById(modif.getId());
-			// Panier pa=reponsePanier.getBody();
-			// Long id=pa.getId();
-			// Long version = pa.getVersion();
-			// pa.getVersion();
-			boolean boo = panierMetier.modifLignePanier(modif.getId(), tarif, block, personne, quantite, total);
+			
+			boolean boo = panierMetier.modifLignePanier(modif.getId(), tarif, block, personne, quantite, total,abonneSpecial,nbreJours);
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("element modifier avec succes", true));
-			reponse = new Reponse<Boolean>(0, messages, true);
+			messages.add(String.format("element modifier avec succes"));
+			reponse = new Reponse<Boolean>(0, messages, boo);
 
 		} catch (Exception e) {
 
@@ -219,7 +295,7 @@ public class PanierController {
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
-
+*/
 	// recuperer toutes les paniers de la base de donnee
 	@GetMapping("/panier")
 	public String findAllPanier() throws JsonProcessingException {
@@ -234,7 +310,7 @@ public class PanierController {
 
 	}
 
-	// renvoie les paniers d'une personne par son identifiant
+	/*// renvoie les paniers d'une personne par son identifiant
 	@GetMapping("/panierParPersonne/{idPersonne}")
 	public String panierPanierParPrersonneId(@PathVariable("idPersonne") long idPersonne)
 			throws JsonProcessingException {
@@ -247,7 +323,7 @@ public class PanierController {
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
-
+*/
 	// renvoie un panier par son identifiant
 	@GetMapping("/panier/{id}")
 	public String chercherPanierParId(@PathVariable Long id) throws JsonProcessingException {

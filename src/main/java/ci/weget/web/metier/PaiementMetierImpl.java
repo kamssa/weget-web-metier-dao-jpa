@@ -1,12 +1,11 @@
 package ci.weget.web.metier;
 
 import java.util.List;
-
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import ci.weget.web.dao.PaiementRepository;
-import ci.weget.web.entites.Paiement;
+import ci.weget.web.entites.commande.Paiement;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
@@ -16,50 +15,58 @@ public class PaiementMetierImpl implements IPaiementMetier {
 	PaiementRepository paiementRepository;
 	@Override
 	public Paiement creer(Paiement entity) throws InvalideTogetException {
-		// TODO Auto-generated method stub
+		
 		return paiementRepository.save(entity);
 	}
 
 	@Override
-	public Paiement modifier(Paiement entity) throws InvalideTogetException {
-		// TODO Auto-generated method stub
-		return paiementRepository.save(entity);
+	public Paiement modifier(Paiement modif) throws InvalideTogetException {
+		Optional<Paiement> paiement = paiementRepository.findById(modif.getId());
+
+		if (paiement.isPresent()) {
+			
+			if (paiement.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+		
+		return paiementRepository.save(modif);
 	}
 
 	@Override
 	public List<Paiement> findAll() {
-		// TODO Auto-generated method stub
 		return paiementRepository.findAll();
 	}
 
 	@Override
 	public Paiement findById(Long id) {
 		
-		return paiementRepository.getByid(id);
+		return paiementRepository.findById(id).get();
 	}
 
 	@Override
 	public boolean supprimer(Long id) {
-		// TODO Auto-generated method stub
-		return false;
+		paiementRepository.deleteById(id);
+		return true;
 	}
 
 	@Override
 	public boolean supprimer(List<Paiement> entites) {
-		// TODO Auto-generated method stub
-		return false;
+		paiementRepository.deleteAll(entites);
+		return true;
 	}
 
 	@Override
 	public boolean existe(Long id) {
-		// TODO Auto-generated method stub
-		return false;
+		paiementRepository.existsById(id);
+		return true;
 	}
 
-	/*@Override
+	@Override
 	public Paiement getPaiementDeCommande(Long id) {
-		// TODO Auto-generated method stub
 		return paiementRepository.getPaiementDeCommande(id);
 	}
-*/
+
 }

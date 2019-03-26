@@ -3,6 +3,7 @@ package ci.weget.web.entites;
 import java.io.Serializable;
 import java.time.LocalDate;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
@@ -17,8 +18,10 @@ public class Adresse implements Serializable {
 	private String adresseGeographique;
 	private String siteWeb;
 	
+	@Column(nullable=true)
 	private double longitude;
 	
+	@Column(nullable=true)
 	private double latitude;
 	private LocalDate date;
 

@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.commande;
 
 import java.time.LocalDateTime;
 
@@ -8,6 +8,8 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_Paiement")
@@ -23,13 +25,16 @@ public class Paiement extends AbstractEntity {
 	private final String cpm_language="fr";
 	private final String cpm_page_action="PAYMENT";
 	private final String cpm_payment_config="SINGLE";
-	private final int cpm_site_id=831130;
+	private  int cpm_site_id=831130;
 	private  String cpm_trans_date=LocalDateTime.now().toString();
-	private  int cpm_trans_id;
+	private  String cpm_trans_id;
 	private final String cpm_version="V1";
 	//private final String notify_url="#";
-
-	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+     private String signature;
+     private String payment_method;
+     private String cel_phone_num;
+     private String cpm_phone_prefixe;
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Commande")
 	private Commande commande;
 
@@ -46,10 +51,7 @@ public class Paiement extends AbstractEntity {
 		return cpm_amount;
 	}
 
-	public int getCpm_site_id() {
-		return cpm_site_id;
-	}
-
+	
 	public String getApikey() {
 		return apikey;
 	}
@@ -84,10 +86,15 @@ public class Paiement extends AbstractEntity {
 
 	
 
-	public int getCpm_trans_id() {
-		return cpm_trans_id;
+	public String getSignature() {
+		return signature;
 	}
 
+	public void setSignature(String signature) {
+		this.signature = signature;
+	}
+
+	
 	public void setCpm_custom(String cpm_custom) {
 		this.cpm_custom = cpm_custom;
 	}
@@ -104,8 +111,45 @@ public class Paiement extends AbstractEntity {
 		this.cpm_amount = cpm_amount;
 	}
 
-	public void setCpm_trans_id(int cpm_trans_id) {
+	
+	public String getCpm_trans_id() {
+		return cpm_trans_id;
+	}
+
+	public void setCpm_trans_id(String cpm_trans_id) {
 		this.cpm_trans_id = cpm_trans_id;
+	}
+
+	public int getCpm_site_id() {
+		return cpm_site_id;
+	}
+
+	public void setCpm_site_id(int cpm_site_id) {
+		this.cpm_site_id = cpm_site_id;
+	}
+
+	public String getPayment_method() {
+		return payment_method;
+	}
+
+	public void setPayment_method(String payment_method) {
+		this.payment_method = payment_method;
+	}
+
+	public String getCel_phone_num() {
+		return cel_phone_num;
+	}
+
+	public void setCel_phone_num(String cel_phone_num) {
+		this.cel_phone_num = cel_phone_num;
+	}
+
+	public String getCpm_phone_prefixe() {
+		return cpm_phone_prefixe;
+	}
+
+	public void setCpm_phone_prefixe(String cpm_phone_prefixe) {
+		this.cpm_phone_prefixe = cpm_phone_prefixe;
 	}
 
 	

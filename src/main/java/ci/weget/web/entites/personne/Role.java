@@ -1,24 +1,33 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.personne;
+
+import java.util.Collection;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import javax.persistence.JoinColumn;
 
 import org.hibernate.annotations.NaturalId;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_ROLES")
 public class Role extends AbstractEntity {
-    
-
-  
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 	@Enumerated(EnumType.STRING)
     @NaturalId
     @Column(length = 60)
     private RoleName name;
+	@ManyToMany
+    @JoinTable(name = "roles_privileges", 
+    joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
+    inverseJoinColumns = @JoinColumn(name = "privilege_id", referencedColumnName = "id"))
+    private Collection<Privilege> privileges;
 
     public Role() {
 

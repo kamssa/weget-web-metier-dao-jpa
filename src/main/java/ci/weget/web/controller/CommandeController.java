@@ -11,21 +11,22 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Membre;
-import ci.weget.web.entites.Commande;
-import ci.weget.web.entites.Panier;
-import ci.weget.web.entites.Personne;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.commande.Commande;
+import ci.weget.web.entites.commande.LigneCommande;
+import ci.weget.web.entites.commande.Panier;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.IAbonnementMetier;
 import ci.weget.web.metier.ICommandeMetier;
+import ci.weget.web.metier.ILigneCommandeMetier;
 import ci.weget.web.metier.IPanierMetier;
-
 import ci.weget.web.modeles.Reponse;
 import ci.weget.web.utilitaires.Static;
 
@@ -39,6 +40,8 @@ public class CommandeController {
 	IAbonnementMetier detailBlocksMetier;
 	@Autowired
 	IPanierMetier panierMetier;
+	@Autowired
+	ILigneCommandeMetier ligneCommandeMetier;
 	@Autowired
 	private ObjectMapper jsonMapper;
 
@@ -63,9 +66,10 @@ public class CommandeController {
 	////////////////////////////////////////////////////////////////////////////////////////////// donnee////////////////////////////////
 
 	@PostMapping("/commande")
-	public String creer(@RequestBody Personne pers) throws JsonProcessingException {
+	public String creer(@RequestBody Personne pers,
+			@RequestParam("code") String code) throws JsonProcessingException {
 		Reponse<Commande> reponse = null;
-		List<Panier> paniers = panierMetier.LesPanierDeLaPersonne(pers.getId());
+		List<Panier> paniers = panierMetier.getPanierByIdPersonne(pers.getId());
 		double montant = 0d;
 		Personne personne = null;
 		for (Panier panier : paniers) {
@@ -75,20 +79,19 @@ public class CommandeController {
 		}
 		
 		try {
-
-			Commande p = commandeMetier.creerCommande(personne, montant);
-			List<String> messages = new ArrayList<>();
+             
+			Commande p = commandeMetier.creerCommande(personne, montant,code);
+			
+		List<LigneCommande>lg=	ligneCommandeMetier.findLigneCommandeParPersonneId(personne.getId());
+			for(LigneCommande ligneC: lg) {
+				ligneC.setCommande(p);
+				ligneCommandeMetier.modifier(ligneC);
+	             }
+		  List<String> messages = new ArrayList<>();
+			
 			messages.add(String.format("%s  à été créer avec succes", p.getId()));
 			reponse = new Reponse<Commande>(0, messages, p);
-			/*if (p.isPaye()==true) {
-				for(Panier pa: paniers) {
-					Block b = pa.getBlock();
-					
-					detailBlocksMetier.addPersonneToBlocks(pers.getLogin(), b.getLibelle());
-				}
 			
-			}*/
-
 		} catch (InvalideTogetException e) {
 
 			reponse = new Reponse<Commande>(1, Static.getErreursForException(e), null);
@@ -121,7 +124,7 @@ public class CommandeController {
 
 		} else {
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("Le paiement n'existe pas"));
+			messages.add(String.format("La commande n'existe pas"));
 			reponse = new Reponse<Commande>(0, messages, null);
 		}
 
@@ -133,23 +136,29 @@ public class CommandeController {
 	// recuperer tous les paiements de la base de
 	/////////////////////////////////////////////////////////////////////////////////////////////// donnee/////////////////////////////////////////
 	@GetMapping("/commande")
-	public String findAllBlocks() throws JsonProcessingException, InvalideTogetException {
+	public String findAll() throws JsonProcessingException, InvalideTogetException {
 		Reponse<List<Commande>> reponse;
 		try {
-			List<Commande> paie = commandeMetier.findAll();
-			reponse = new Reponse<List<Commande>>(0, null, paie);
+			List<Commande> commande = commandeMetier.findAll();
+			if (!commande.isEmpty()) {
+				reponse = new Reponse<List<Commande>>(0, null, commande);
+			} else {
+				List<String> messages = new ArrayList<>();
+				messages.add("Pas de commande trouve");
+				reponse = new Reponse<List<Commande>>(1, messages, new ArrayList<>());
+			}
 		} catch (Exception e) {
 			reponse = new Reponse<List<Commande>>(1, Static.getErreursForException(e), new ArrayList<>());
 		}
 		return jsonMapper.writeValueAsString(reponse);
 
 	}
-	@GetMapping("/commande/{id}")
-	public String findCommaneParPersonne(@PathVariable Long id) throws JsonProcessingException, InvalideTogetException {
+	@GetMapping("/getCommandeByIdPersonne/{id}")
+	public String getByIdPersonne(@PathVariable Long id) throws JsonProcessingException, InvalideTogetException {
 		Reponse<Commande> reponse;
 		try {
-		Commande paie = commandeMetier.commandeParPersonne(id);
-			reponse = new Reponse<Commande>(0, null, paie);
+		Commande commande = commandeMetier.getByIdPersonne(id);
+			reponse = new Reponse<Commande>(0, null, commande);
 		} catch (Exception e) {
 			reponse = new Reponse<Commande>(1, Static.getErreursForException(e), null);
 		}

@@ -1,5 +1,6 @@
 package ci.weget.web.entites.publicite;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
@@ -9,14 +10,16 @@ import ci.weget.web.entites.AbstractEntity;
 @Table(name="t_Position")
 public class Position extends AbstractEntity {
 
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 1L;
 	private int numero;
 	private int prix;
 	private int duree;
 	private String typeDuree;
+	private String nom;
+	private String format;
+	@Column(unique=true)
+	private String libelle;
 	public int getNumero() {
 		return numero;
 	}
@@ -40,6 +43,24 @@ public class Position extends AbstractEntity {
 	}
 	public void setTypeDuree(String typeDuree) {
 		this.typeDuree = typeDuree;
+	}
+	public String getLibelle() {
+		return libelle;
+	}
+	public void setLibelle(String libelle) {
+		this.libelle = libelle;
+	}
+	public String getNom() {
+		return nom;
+	}
+	public void setNom(String nom) {
+		this.nom = nom;
+	}
+	public String getFormat() {
+		return format;
+	}
+	public void setFormat(String format) {
+		this.format = format;
 	}
 	
 

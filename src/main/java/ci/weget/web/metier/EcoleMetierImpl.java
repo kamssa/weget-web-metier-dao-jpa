@@ -1,98 +1,117 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ci.weget.web.dao.DetailAbonnementRepository;
-import ci.weget.web.entites.DetailAbonnement;
+import ci.weget.web.dao.AbonnementRepository;
+import ci.weget.web.dao.EcoleRepository;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.ecole.Ecole;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
 @Transactional
-public class DetailAbonnementMetierImpl implements IDetailAbonnementMetier {
-@Autowired
-private DetailAbonnementRepository detailAbonnementRepository;
+public class EcoleMetierImpl implements IEcoleMetier {
+	@Autowired
+	private EcoleRepository ecoleRepository;
+	@Autowired
+	private AbonnementRepository abonnementRepository;
+
 	@Override
-	public DetailAbonnement creer(DetailAbonnement entity) throws InvalideTogetException {
-		
-		return detailAbonnementRepository.save(entity);
+	public Ecole creer(Ecole entity) throws InvalideTogetException {
+
+		Ecole db = ecoleRepository.save(entity);
+
+		if (db.getNom().equals(null) && db.getPresentation().equals(null) && db.getPathLogo().equals(null)
+				&& db.getTypeEtablissement().equals(null) && db.getAdresse().getPays().equals(null)
+				&& db.getAdresse().getVille().equals(null) && db.getAdresse().getBoitePostal().equals(null)
+				&& db.getAdresse().getEmail().equals(null) && db.getAdresse().getSiteWeb().equals(null)) {
+			throw new RuntimeException("Vos informations ne sont pas à jour");
+		}
+		Abonnement ab = db.getAbonnement();
+		ab.setActive(true);
+		abonnementRepository.save(ab);
+		return db;
 	}
 
 	@Override
-	public DetailAbonnement modifier(DetailAbonnement entity) throws InvalideTogetException {
-		
-		return detailAbonnementRepository.save(entity);
+	public Ecole modifier(Ecole modif) throws InvalideTogetException {
+
+		Optional<Ecole> detailAbonnement = ecoleRepository.findById(modif.getId());
+		if (detailAbonnement.get().getAbonnement().getEspace().getTypeEspace().equals("ecole")) {
+
+			if (detailAbonnement.isPresent()) {
+
+				if (detailAbonnement.get().getVersion() != modif.getVersion()) {
+					throw new InvalideTogetException("ce libelle a deja ete modifier");
+				}
+
+			} else
+				throw new InvalideTogetException("modif est un objet null");
+
+			detailAbonnement.get().getAbonnement().setActive(true);
+		}
+		return ecoleRepository.save(modif);
 	}
 
 	@Override
-	public List<DetailAbonnement> findAll() {
-		
-		return detailAbonnementRepository.findAll();
+	public List<Ecole> findAll() {
+
+		return ecoleRepository.findAll();
 	}
 
 	@Override
-	public DetailAbonnement findById(Long id) {
-		
-		return detailAbonnementRepository.findById(id).get();
+	public Ecole findById(Long id) {
+
+		return ecoleRepository.findById(id).get();
 	}
 
 	@Override
 	public boolean supprimer(Long id) {
-		
-		detailAbonnementRepository.deleteById(id);
+
+		ecoleRepository.deleteById(id);
 		return true;
 	}
 
 	@Override
-	public boolean supprimer(List<DetailAbonnement> entites) {
-		
-		 detailAbonnementRepository.deleteAll(entites);
-		 return true;
+	public boolean supprimer(List<Ecole> entites) {
+
+		ecoleRepository.deleteAll(entites);
+		return true;
 	}
 
 	@Override
 	public boolean existe(Long id) {
-		
-		return detailAbonnementRepository.existsById(id);
+
+		return ecoleRepository.existsById(id);
 	}
 
 	@Override
-	public DetailAbonnement rechercheDetailAbonnementParId(Long id) {
-		
-		return detailAbonnementRepository.findDetailAonnementyId(id);
+	public List<Ecole> findEcoleByMc(String mc) {
+		return ecoleRepository.findEcoleByMc(mc);
 	}
 
 	@Override
-	public List<DetailAbonnement> chercherDetailAbonnementParMc(String mc) {
-		
-		return detailAbonnementRepository.chercherDetailAbonnementParMc(mc);
+	public Ecole findEcoleByIdAbonnement(long id) {
+
+		return ecoleRepository.findEcoleByIdAbonnement(id);
+	}
+
+	
+	@Override
+	public Ecole findEcoleParNom(String nom) {
+
+		return ecoleRepository.findEcoleByNom(nom);
 	}
 
 	@Override
-	public DetailAbonnement findDetailAbonnementParIdDetailBlock(Long id) {
-		
-		return detailAbonnementRepository.findDetailAbonnementParIdDetailBlock(id);
-	}
+	public List<Ecole> findEcoleIdTypeEtablissement(long id) {
 
-	@Override
-	public List<DetailAbonnement> findDetailAbonnementParIdBlock(Long id) {
-		
-		return detailAbonnementRepository.findDetailAbonnementParIdBlock(id);
-	}
-
-	@Override
-	public DetailAbonnement findDetailAbonnementParNom(String nom) {
-		
-		return detailAbonnementRepository.findDetailAbonnementParNom(nom);
-	}
-
-	@Override
-	public List<DetailAbonnement> findDetailAbonnementParIdEta(Long id) {
-		// TODO Auto-generated method stub
-		return detailAbonnementRepository.findDetailAbonnementParIdEta(id);
+		return ecoleRepository.findEcoleByTypeEtablissement(id);
 	}
 
 }

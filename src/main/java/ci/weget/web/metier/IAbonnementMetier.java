@@ -1,35 +1,44 @@
 package ci.weget.web.metier;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Abonnement;
-import ci.weget.web.entites.Membre;
-import ci.weget.web.entites.Personne;
+import org.springframework.web.multipart.MultipartFile;
+
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
 
 public interface IAbonnementMetier extends Imetier<Abonnement, Long> {
 
-	public List<Abonnement> personneALLBlock(long id);
+	List<Abonnement> getAbonnementByIdEspace(long id);
 
-	public List<Abonnement> detailBlocksPersonneParId(Long id);
+	List<Abonnement> getAbonnementByIdPersonne(long id);
 
-	public List<Abonnement> detailBlocksPersonneParLogin(String login);
+	List<Abonnement> getAbonnementByLogin(String login);
 
-	public List<Abonnement> tousLesDetailBlock();
+	Abonnement updateVue(long idPersonne, long idEspace) throws InvalideTogetException;
 
-public void creerUnAbonnement(Long id) throws InvalideTogetException;
+	List<Abonnement> getAbonnementByVille(String ville);
 
-	public Abonnement modifierVue(Long idPersonne, Long idBlock) throws InvalideTogetException;
+	List<Abonnement> abonnementSpecial();
 
-	List<Abonnement> chercherPersonneParSpecialite(String specialite);
+	List<Personne> uneOcurrenceAbonne();
 
-	List<Abonnement> chercherPersonneParVille(String ville);
+	Abonnement statutAbonnement(long id);
 
-	List<Abonnement> findDtailBlocksParIdBlock(Long id);
+	List<Abonnement> abonnementByMois(LocalDate mois);
 
-//	public List<Abonnement> rechercherParCompetenceOuVille(String specialite, String ville);
+	List<Abonnement> abonnementBani();
 
-	public List<Abonnement> abonnesSpecial();
+	boolean creerAbonne(Personne personne) throws InvalideTogetException;
 
+	List<Abonnement> getAbonnementByParam(String type, String specialite, String ville, double latitude,
+			double longitude, boolean proximite);
+
+	Abonnement createImageAbonnement(MultipartFile file, Long id) throws IllegalStateException, IOException;
+
+	byte[] getImageAbonnement(Long version, Long id, String libelle) throws FileNotFoundException, IOException;
 }

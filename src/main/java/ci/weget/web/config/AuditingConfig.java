@@ -1,6 +1,6 @@
 package ci.weget.web.config;
 
-import java.nio.file.attribute.UserPrincipal;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Optional;
+import ci.weget.web.entites.personne.Personne;
 @Configuration
 @EnableJpaAuditing
 public class AuditingConfig {
@@ -33,7 +33,7 @@ class SpringSecurityAuditAwareImpl implements AuditorAware<Long> {
             return Optional.empty();
         }
 
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Personne userPrincipal = (Personne) authentication.getPrincipal();
 
         return Optional.ofNullable(null);
     }

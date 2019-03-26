@@ -5,34 +5,29 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-import ci.weget.web.entites.DetailAbonnement;
-import ci.weget.web.entites.TypeEtablissement;
+import ci.weget.web.entites.ecole.Ecole;
+import ci.weget.web.entites.ecole.TypeEtablissement;
 
-public interface DetailAbonnementRepository extends JpaRepository<DetailAbonnement, Long> {
+@Repository
+public interface EcoleRepository extends JpaRepository<Ecole, Long> {
 
-	// retrouver un sous block a partir de son libelle
-	@Query("select da from DetailAbonnement da where da.id=?1")
-	DetailAbonnement findDetailAonnementyId(Long id);
+	
+	// rechercher une ecole par mot cle
+	@Query("select e from Ecole e where e.nom like %:x%")
+	List<Ecole> findEcoleByMc(@Param("x") String mc);
 
-	// rechercher un sous bloc a partir de son libelle
-	@Query("select da from DetailAbonnement da where da.nom like %:x%")
-	List<DetailAbonnement> chercherDetailAbonnementParMc(@Param("x") String mc);
+	// recuperer abonnement d'une ecole
+	@Query("select e from Ecole e  where e.abonnement.id=?1")
+	Ecole findEcoleByIdAbonnement(long id);
 
-	// ramener les sous blocks a partir de id de detail block
-	@Query("select da from DetailAbonnement da  where da.abonnement.id=?1")
-	DetailAbonnement findDetailAbonnementParIdDetailBlock(Long id);
+	// recuperer une ecole par son nom
+	@Query("select e from Ecole e where e.nom=?1")
+	Ecole findEcoleByNom(String nom);
 
-	// rechercher les sous blocks par block
-	@Query("select da from DetailAbonnement da  where da.idBlock=?1")
-	List<DetailAbonnement> findDetailAbonnementParIdBlock(Long id);
-
-	// rechercher les sous blocks par libelle
-	@Query("select da from DetailAbonnement da  where da.nom=?1")
-	DetailAbonnement findDetailAbonnementParNom(String nom);
-
-	// rechercher les Deatail abonnement  par typeEtablissemnt
-	@Query("select da from DetailAbonnement da  where da.typeEtablissement=?1")
-	List<DetailAbonnement> findDetailAbonnementParIdEta(Long id);
+	// recupere les ecoles par le type de l'etablissement et abonnement actif
+	@Query("select e from Ecole e  where e.typeEtablissement.id=?1 AND e.abonnement.active=true")
+	List<Ecole> findEcoleByTypeEtablissement(long id);
 
 }

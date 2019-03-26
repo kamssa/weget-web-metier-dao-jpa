@@ -6,12 +6,9 @@ import javax.persistence.Table;
 import ci.weget.web.entites.AbstractEntity;
 
 @Entity
-@Table(name = "T_ContratPeriode")
+@Table(name = "T_ComboContratPeriode")
 public class ContratPeriode extends AbstractEntity {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
     private String libelle;
     private String description;

@@ -1,12 +1,14 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ci.weget.web.dao.DocComptRepository;
 import ci.weget.web.entites.competences.DocCompetence;
+import ci.weget.web.entites.ecole.Ecole;
 import ci.weget.web.exception.InvalideTogetException;
 import org.springframework.core.io.Resource;
 import java.nio.file.Path;
@@ -27,9 +29,20 @@ public DocCompetence creer(DocCompetence entity) throws InvalideTogetException {
 }
 
 @Override
-public DocCompetence modifier(DocCompetence entity) throws InvalideTogetException {
-	// TODO Auto-generated method stub
-	return docCompetenceRepository.save(entity);
+public DocCompetence modifier(DocCompetence modif) throws InvalideTogetException {
+	
+	Optional<DocCompetence> docCompetence = docCompetenceRepository.findById(modif.getId());
+
+	if (modif != null) {
+		
+		if (docCompetence.get().getVersion() != modif.getVersion()) {
+			throw new InvalideTogetException("ce libelle a deja ete modifier");
+		}
+
+	} else
+		throw new InvalideTogetException("modif est un objet null");
+	
+	return docCompetenceRepository.save(modif);
 }
 
 @Override
@@ -47,13 +60,14 @@ public DocCompetence findById(Long id) {
 @Override
 public boolean supprimer(Long id) {
 	// TODO Auto-generated method stub
-	return false;
+	 docCompetenceRepository.deleteById(id);
+	 return true;
 }
 
 @Override
 public boolean supprimer(List<DocCompetence> entites) {
-	// TODO Auto-generated method stub
-	return false;
+	docCompetenceRepository.deleteAll(entites);
+	return true;
 }
 
 @Override

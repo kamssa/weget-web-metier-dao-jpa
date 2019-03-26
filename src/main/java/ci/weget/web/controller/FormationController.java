@@ -31,7 +31,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.Formation;
+import ci.weget.web.entites.ecole.Formation;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.IFormationMetier;
 import ci.weget.web.modeles.Reponse;
@@ -44,10 +45,7 @@ public class FormationController {
 	private IFormationMetier formationMetier;
 	@Autowired
 	private ObjectMapper jsonMapper;
-	//////////// chemin ou sera sauvegarder les photos
-	//////////// ////////////////////////////////////////
-	@Value("${dir.images}")
-	private String togetImage;
+	
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////// recuperer un block a partir de son identifiant
@@ -141,7 +139,7 @@ public class FormationController {
 	public String formationParSousBlocks(@PathVariable Long id) throws JsonProcessingException, InvalideTogetException {
 		Reponse<List<Formation>> reponse;
 		try {
-			List<Formation> formations = formationMetier.getFormationParSousBlock(id);
+			List<Formation> formations = formationMetier.getFormationByEcole(id);
 			reponse = new Reponse<List<Formation>>(0, null, formations);
 		} catch (Exception e) {
 			reponse = new Reponse<>(1, Static.getErreursForException(e), new ArrayList<>());
@@ -180,138 +178,61 @@ public class FormationController {
 		return jsonMapper.writeValueAsString(reponse);
 	}
 
-	@PostMapping("/formationPhoto")
+	@PostMapping("/imageFormation")
 	public String creerFormationPhoto(@RequestParam(name = "image_photo") MultipartFile file, @RequestParam Long id)
 			throws Exception {
-		Reponse<Formation> reponse = null;
-		Reponse<Formation> reponseParLibelle;
-		// recuperer le libelle à partir du nom de la photo
-		String libelle = file.getOriginalFilename();
+		Reponse<Formation> reponse;
 
-		reponseParLibelle = getFormationById(id);
-		Formation f = reponseParLibelle.getBody();
-		System.out.println(f);
+		try {
 
-		String path = "http://wegetback:8080/getPhotoFormation/" + f.getVersion() + "/" + f.getId() + "/" + libelle;
-		System.out.println(path);
-		if (reponseParLibelle.getStatus() == 0) {
-			String dossier = togetImage + "/" + "photoFormation" + "/" + f.getId() + "/";
-			File rep = new File(dossier);
-
-			if (!file.isEmpty()) {
-				if (!rep.exists() && !rep.isDirectory()) {
-					rep.mkdirs();
-				}
-			}
-			try {
-				// enregistrer le chemin dans la photo
-				f.setPathPhoto(path);
-				System.out.println(path);
-				file.transferTo(new File(dossier + libelle));
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s (photo ajouter avec succes)", f.getId()));
-				reponse = new Reponse<Formation>(0, messages, formationMetier.modifier(f));
-
-			} catch (Exception e) {
-
-				reponse = new Reponse<Formation>(1, Static.getErreursForException(e), null);
-			}
-
-		} else {
+			Formation f = formationMetier.createImageFormation(file, id);
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("cette formation n'existe pas"));
-			reponse = new Reponse<Formation>(reponseParLibelle.getStatus(), reponseParLibelle.getMessages(), null);
+			messages.add(String.format(" à été créer avec succes"));
+			reponse = new Reponse<Formation>(0, messages, f);
+
+		} catch (Exception e) {
+
+			reponse = new Reponse<Formation>(1, Static.getErreursForException(e), null);
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
 
-	@PostMapping("/formationFormulaire")
+	@PostMapping("/formulaireFormation")
 	public String creerFormationFormulaire(@RequestParam(name = "image_photo") MultipartFile file,
 			@RequestParam Long id) throws Exception {
-		Reponse<Formation> reponse = null;
-		Reponse<Formation> reponseParLibelle;
-		// recuperer le libelle à partir du nom de la photo
-		String libelle = file.getOriginalFilename();
+		
+		Reponse<Formation> reponse;
 
-		reponseParLibelle = getFormationById(id);
-		Formation f = reponseParLibelle.getBody();
-		System.out.println(f);
+		try {
 
-		String path = "http://wegetback:8080/getFormulaireFormation/" + f.getVersion() + "/" + f.getId() + "/"
-				+ libelle;
-		System.out.println(path);
-		if (reponseParLibelle.getStatus() == 0) {
-			String dossier = togetImage + "/" + "FormulaireFormation" + "/" + f.getId() + "/";
-			File rep = new File(dossier);
-
-			if (!file.isEmpty()) {
-				if (!rep.exists() && !rep.isDirectory()) {
-					rep.mkdirs();
-				}
-			}
-			try {
-				// enregistrer le chemin dans la photo
-				f.setPathFormulaire(path);
-				System.out.println(path);
-				file.transferTo(new File(dossier + libelle));
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s (Formulaire ajouter avec succes)", f.getId()));
-				reponse = new Reponse<Formation>(0, messages, formationMetier.modifier(f));
-
-			} catch (Exception e) {
-
-				reponse = new Reponse<Formation>(1, Static.getErreursForException(e), null);
-			}
-
-		} else {
+			Formation f = formationMetier.createFormulaireFormation(file, id);
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("cette formation n'existe pas"));
-			reponse = new Reponse<Formation>(reponseParLibelle.getStatus(), reponseParLibelle.getMessages(), null);
+			messages.add(String.format(" à été créer avec succes"));
+			reponse = new Reponse<Formation>(0, messages, f);
+
+		} catch (Exception e) {
+
+			reponse = new Reponse<Formation>(1, Static.getErreursForException(e), null);
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
 
-	@PostMapping("/formationCatalogue")
+	@PostMapping("/catalogueFormation")
 	public String creerFormationCatalogue(@RequestParam(name = "image_photo") MultipartFile file, @RequestParam Long id)
 			throws Exception {
-		Reponse<Formation> reponse = null;
-		Reponse<Formation> reponseParLibelle;
-		// recuperer le libelle à partir du nom de la photo
-		String libelle = file.getOriginalFilename();
+		
+		Reponse<Formation> reponse;
 
-		reponseParLibelle = getFormationById(id);
-		Formation f = reponseParLibelle.getBody();
-		System.out.println(f);
+		try {
 
-		String path = "http://wegetback:8080/getCatalogueFormation/" + f.getVersion() + "/" + f.getId() + "/" + libelle;
-		System.out.println(path);
-		if (reponseParLibelle.getStatus() == 0) {
-			String dossier = togetImage + "/" + "CatalogueFormation" + "/" + f.getId() + "/";
-			File rep = new File(dossier);
-
-			if (!file.isEmpty()) {
-				if (!rep.exists() && !rep.isDirectory()) {
-					rep.mkdirs();
-				}
-			}
-			try {
-				// enregistrer le chemin dans la photo
-				f.setPathCatalogue(path);
-				System.out.println(path);
-				file.transferTo(new File(dossier + libelle));
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s (Catalogue ajouter avec succes)", f.getId()));
-				reponse = new Reponse<Formation>(0, messages, formationMetier.modifier(f));
-
-			} catch (Exception e) {
-
-				reponse = new Reponse<Formation>(1, Static.getErreursForException(e), null);
-			}
-
-		} else {
+			Formation f = formationMetier.createCatalogueFormation(file, id);
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("cette formation n'existe pas"));
-			reponse = new Reponse<Formation>(reponseParLibelle.getStatus(), reponseParLibelle.getMessages(), null);
+			messages.add(String.format(" à été créer avec succes"));
+			reponse = new Reponse<Formation>(0, messages, f);
+
+		} catch (Exception e) {
+
+			reponse = new Reponse<Formation>(1, Static.getErreursForException(e), null);
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
@@ -320,86 +241,29 @@ public class FormationController {
 	//////// /////////////////////////////////
 
 	@GetMapping(value = "/getPhotoFormation/{version}/{id}/{libelle}", produces = MediaType.IMAGE_JPEG_VALUE)
-	public ResponseEntity<Resource> getPhotosFormation(@PathVariable String version, @PathVariable Long id,
-			@PathVariable String libelle, HttpServletRequest request) throws FileNotFoundException, IOException {
-
-		String dossier = togetImage + "/" + "photoFormation" + "/" + id + "/" + libelle;
-
-		Path filePath = Paths.get(dossier);
-		Resource resource = new UrlResource(filePath.toUri());
-		// Try to determine file's content type
-		String contentType = null;
-		try {
-			contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-		} catch (IOException ex) {
-			throw new RuntimeException("Desole,nous ne pouvons determiner le type de fichier");
-		}
-		// Fallback to the default content type if type could not be determined
-		if (contentType == null) {
-			contentType = "application/octet-stream";
-		}
-
-		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-				.body(resource);
+	public ResponseEntity<Resource> getPhotosFormation(@PathVariable Long version, @PathVariable Long id, HttpServletRequest request) throws FileNotFoundException, IOException {
+		ResponseEntity<Resource> img=null;
+		img= formationMetier.getImageFormation(version, id,request);
+		return img;
+	
 
 	}
 
 	@GetMapping(value = "/getFormulaireFormation/{version}/{id}/{libelle}", produces = MediaType.IMAGE_JPEG_VALUE)
-	public ResponseEntity<Resource> getFormulaireFormation(@PathVariable String version, @PathVariable Long id,
-			@PathVariable String libelle, HttpServletRequest request) throws FileNotFoundException, IOException {
+	public ResponseEntity<Resource> getFormulaireFormation(@PathVariable Long version, @PathVariable Long id,
+			 HttpServletRequest request) throws FileNotFoundException, IOException {
 
-		System.out.println(version);
-
-		String dossier = togetImage + "/" + "FormulaireFormation" + "/" + id + "/" + libelle;
-
-		Path filePath = Paths.get(dossier);
-		Resource resource = new UrlResource(filePath.toUri());
-		// Try to determine file's content type
-		String contentType = null;
-		try {
-			contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-		} catch (IOException ex) {
-			throw new RuntimeException("Desole,nous ne pouvons determiner le type de fichier");
-		}
-		// Fallback to the default content type if type could not be determined
-		if (contentType == null) {
-			contentType = "application/octet-stream";
-		}
-
-		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-				.body(resource);
-
+		ResponseEntity<Resource> img=null;
+		img= formationMetier.getImageFormulaireFormation(version, id,request);
+		return img;
 	}
 
 	@GetMapping(value = "/getCatalogueFormation/{version}/{id}/{libelle}", produces = MediaType.IMAGE_JPEG_VALUE)
-	public ResponseEntity<Resource> getCatalogueFormation(@PathVariable String version,
-			@PathVariable Long id,
-			@PathVariable String libelle,
-			HttpServletRequest request) throws FileNotFoundException, IOException {
+	public ResponseEntity<Resource> getCatalogueFormation(@PathVariable Long version,
+			@PathVariable Long id,HttpServletRequest request) throws FileNotFoundException, IOException {
 
-		System.out.println(version);
-
-		String dossier = togetImage + "/" + "CatalogueFormation" + "/" + id + "/" + libelle;
-
-		Path filePath = Paths.get(dossier);
-		Resource resource = new UrlResource(filePath.toUri());
-		// Try to determine file's content type
-		String contentType = null;
-		try {
-			contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-		} catch (IOException ex) {
-			throw new RuntimeException("Desole,nous ne pouvons determiner le type de fichier");
-		}
-		// Fallback to the default content type if type could not be determined
-		if (contentType == null) {
-			contentType = "application/octet-stream";
-		}
-
-		return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType))
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-				.body(resource);
-
+		ResponseEntity<Resource> img=null;
+		img= formationMetier.getImageFormation(version, id,request);
+		return img;
 	}
 }

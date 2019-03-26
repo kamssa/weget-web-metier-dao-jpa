@@ -2,33 +2,53 @@ package ci.weget.web.modeles;
 
 import javax.validation.constraints.NotBlank;
 
-/**
- * Created by rajeevkumarsingh on 02/08/17.
- */
 public class LoginRequest {
-    @NotBlank
-    private String login;
 
-    @NotBlank
-    private String password;
+	@NotBlank
+	private String loginOrTelephone;
 
-    
-    public String getLogin() {
-		return login;
+	private String telephone;
+
+	@NotBlank
+	private String password;
+	@NotBlank
+	private String type;
+
+	public LoginRequest() {
+		super();
+
 	}
 
-	public void setLogin(String login) {
-		this.login = login;
+	public String getTelephone() {
+		return telephone;
+	}
+
+	public void setTelephone(String telephone) {
+		this.telephone = telephone;
+	}
+
+	public String getLoginOrTelephone() {
+		return loginOrTelephone;
+	}
+
+	public void setLoginOrTelephone(String loginOrTelephone) {
+		this.loginOrTelephone = loginOrTelephone;
 	}
 
 	public String getPassword() {
-        return password;
-    }
+		return password;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-	
-    
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
 }

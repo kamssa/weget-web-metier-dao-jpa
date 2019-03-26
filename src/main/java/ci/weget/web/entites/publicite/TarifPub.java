@@ -24,7 +24,7 @@ public class TarifPub extends AbstractEntity {
 	private boolean isFree;
 	private boolean pubSpecial;
 	private String dimension;
-	@Column(columnDefinition="TEXT")
+	@Column(columnDefinition = "TEXT")
 	private String description;
 
 	@ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -33,13 +33,12 @@ public class TarifPub extends AbstractEntity {
 
 	@Column(name = "id_Publicite")
 	private long idPublicite;
-	
+
 	public TarifPub() {
 		super();
 
 	}
 
-	
 	public TarifPub(String titre, double prix, int dureeTarif, String typeDuree, boolean isFree, boolean pubSpecial,
 			String description, Publicite publicite, long idPublicite) {
 		super();
@@ -54,46 +53,37 @@ public class TarifPub extends AbstractEntity {
 		this.idPublicite = idPublicite;
 	}
 
-
 	public String getDimension() {
 		return dimension;
 	}
-
 
 	public void setDimension(String dimension) {
 		this.dimension = dimension;
 	}
 
-
 	public boolean isPubSpecial() {
 		return pubSpecial;
 	}
-
 
 	public void setPubSpecial(boolean pubSpecial) {
 		this.pubSpecial = pubSpecial;
 	}
 
-
 	public Publicite getPublicite() {
 		return publicite;
 	}
-
 
 	public void setPublicite(Publicite publicite) {
 		this.publicite = publicite;
 	}
 
-
 	public long getIdPublicite() {
 		return idPublicite;
 	}
 
-
 	public void setIdPublicite(long idPublicite) {
 		this.idPublicite = idPublicite;
 	}
-
 
 	public String getTitre() {
 		return titre;
@@ -111,7 +101,6 @@ public class TarifPub extends AbstractEntity {
 		this.prix = prix;
 	}
 
-	
 	public String getDescription() {
 		return description;
 	}
@@ -144,7 +133,6 @@ public class TarifPub extends AbstractEntity {
 		this.isFree = isFree;
 	}
 
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -162,7 +150,6 @@ public class TarifPub extends AbstractEntity {
 		result = prime * result + ((typeDuree == null) ? 0 : typeDuree.hashCode());
 		return result;
 	}
-
 
 	@Override
 	public boolean equals(Object obj) {
@@ -206,7 +193,6 @@ public class TarifPub extends AbstractEntity {
 		return true;
 	}
 
-
 	@Override
 	public String toString() {
 		return "TarifPub [titre=" + titre + ", prix=" + prix + ", dureeTarif=" + dureeTarif + ", typeDuree=" + typeDuree
@@ -214,6 +200,4 @@ public class TarifPub extends AbstractEntity {
 				+ publicite + ", idPublicite=" + idPublicite + "]";
 	}
 
-
-	
 }

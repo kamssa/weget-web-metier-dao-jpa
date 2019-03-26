@@ -12,6 +12,8 @@ public class ModifPanier {
 	private long idBlock;
 	private long idMembre;
 	private long idTarif;
+	private double nbreJours;
+	private boolean abonneSpecial;
 
 	public Long getId() {
 		return id;
@@ -67,6 +69,22 @@ public class ModifPanier {
 
 	public void setTotal(Double total) {
 		this.total = total;
+	}
+
+	public boolean isAbonneSpecial() {
+		return abonneSpecial;
+	}
+
+	public void setAbonneSpecial(boolean abonneSpecial) {
+		this.abonneSpecial = abonneSpecial;
+	}
+
+	public double getNbreJours() {
+		return nbreJours;
+	}
+
+	public void setNbreJours(double nbreJours) {
+		this.nbreJours = nbreJours;
 	}
 
 }

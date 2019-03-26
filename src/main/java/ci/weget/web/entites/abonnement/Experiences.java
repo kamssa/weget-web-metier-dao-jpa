@@ -1,8 +1,13 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.abonnement;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_Experience")
@@ -17,8 +22,17 @@ public class Experiences extends AbstractEntity {
 	private String tache;
 	private String lieu;
 	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name = "id_cvPersonne")
+    CvPersonne cvPersonne;
 	
 	
+	public CvPersonne getCvPersonne() {
+		return cvPersonne;
+	}
+	public void setCvPersonne(CvPersonne cvPersonne) {
+		this.cvPersonne = cvPersonne;
+	}
 	public String getPostOccupe() {
 		return postOccupe;
 	}

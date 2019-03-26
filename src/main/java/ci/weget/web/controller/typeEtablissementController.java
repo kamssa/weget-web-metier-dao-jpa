@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,10 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.Abonnement;
-import ci.weget.web.entites.DetailAbonnement;
-import ci.weget.web.entites.TypeEtablissement;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.abonnement.CursusColaire;
 import ci.weget.web.entites.combo.Specialite;
+import ci.weget.web.entites.ecole.Ecole;
+import ci.weget.web.entites.ecole.Temoignage;
+import ci.weget.web.entites.ecole.TypeEtablissement;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.ITypeEtablissementMetier;
 import ci.weget.web.modeles.Reponse;
@@ -161,64 +165,95 @@ public class typeEtablissementController {
 			return jsonMapper.writeValueAsString(reponse);
 
 		}
+		@DeleteMapping("/typeEtablissement/{id}")
+		public String supprimer(@PathVariable("id") Long id) throws JsonProcessingException {
 
-	@PostMapping("/phototypeEtablissement")
-	public String creerPhoto(@RequestParam(name = "image_photo") MultipartFile file) throws Exception {
-		Reponse<TypeEtablissement> reponse = null;
-		Reponse<TypeEtablissement> reponseParLibelle;
-		// recuperer le libelle à partir du nom de la photo
-		String libelle = file.getOriginalFilename();
-		reponseParLibelle = getCategoryBlockParLibellle(libelle);
-		TypeEtablissement b = reponseParLibelle.getBody();
-		System.out.println(b);
+			Reponse<Boolean> reponse = null;
+			boolean erreur = false;
+			TypeEtablissement b = null;
+			if (!erreur) {
+				Reponse<TypeEtablissement> responseSup = getTypeEtablissementById(id);
+				b = responseSup.getBody();
+				if (responseSup.getStatus() != 0) {
+					reponse = new Reponse<>(responseSup.getStatus(), responseSup.getMessages(), null);
+					erreur = true;
 
-		String path = "http://wegetback:8080/getPhotoTypeEtablissement/"+ b.getVersion()+"/" + b.getId();
-		System.out.println(path);
-		if (reponseParLibelle.getStatus() == 0) {
-			String dossier = togetImage + "/";
-			File rep = new File(dossier);
-
-			if (!file.isEmpty()) {
-				if (!rep.exists() && !rep.isDirectory()) {
-					rep.mkdir();
 				}
 			}
-			try {
-				// enregistrer le chemin dans la photo
-				b.setPhathphoto(path);
-				System.out.println(path);
-				file.transferTo(new File(dossier + b.getId()));
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s (photo ajouter avec succes)", b.getLibelle()));
-				reponse = new Reponse<TypeEtablissement>(0, messages, typeEtablissementMetier.modifier(b));
+			if (!erreur) {
+				// suppression
+				try {
 
-			} catch (Exception e) {
+					List<String> messages = new ArrayList<>();
+					messages.add(String.format(" %s a ete supprime", b.getId()));
 
-				reponse = new Reponse<TypeEtablissement>(1, Static.getErreursForException(e), null);
+					reponse = new Reponse<Boolean>(0, messages, typeEtablissementMetier.supprimer(id));
+
+				} catch (RuntimeException e1) {
+					reponse = new Reponse<>(3, Static.getErreursForException(e1), null);
+				}
 			}
-
-		} else {
-			List<String> messages = new ArrayList<>();
-			messages.add(String.format("cette personne n'existe pas"));
-			reponse = new Reponse<TypeEtablissement>(reponseParLibelle.getStatus(), reponseParLibelle.getMessages(), null);
+			return jsonMapper.writeValueAsString(reponse);
 		}
-		return jsonMapper.writeValueAsString(reponse);
-	}
+		@PostMapping("/photoTypeEtablissement")
+		public String creerPhoto(@RequestParam(name = "image_photo") MultipartFile file,
+				@RequestParam Long id) throws Exception {
+			Reponse<TypeEtablissement> reponse = null;
+			Reponse<TypeEtablissement> reponseParLibelle;
+			// recuperer le libelle à partir du nom de la photo
+			String libelle = file.getOriginalFilename();
+			
+			reponseParLibelle = getTypeEtablissementById(id);
+			TypeEtablissement t = reponseParLibelle.getBody();
+			System.out.println(t);
 
-	//////// recuperer une photo avec pour retour tableau de byte
-	//////// /////////////////////////////////
+			String path = "http://wegetback:8080/getPhotoTypeEtablissement" + "/" + t.getId() + "/"
+					+ libelle;
+			System.out.println(path);
+			if (reponseParLibelle.getStatus() == 0) {
+				String dossier = togetImage + "/" + "photoTypeEtablissement" + "/"+t.getId()+ "/";
+				File rep = new File(dossier);
 
-	@GetMapping(value = "/getPhotoTypeEtablissement/{version}/{id}", produces = MediaType.IMAGE_JPEG_VALUE)
-	public byte[] getPhotos(@PathVariable String version, @PathVariable Long id)
-			throws FileNotFoundException, IOException {
-		
-		 // Reponse<Blocks> personneLibelle = getBlockParLibellle(libelle); 
-		  //Blocks b = personneLibelle.getBody(); 
-		  System.out.println(version); 
-		  String dossier = togetImage+"/"; 
-		  File f = new File(dossier+id); 
-		  byte[] img = IOUtils.toByteArray(new FileInputStream(f));
-		 
-		return img;
-	}
+				if (!file.isEmpty()) {
+					if (!rep.exists() && !rep.isDirectory()) {
+						rep.mkdir();
+					}
+				}
+				try {
+					// enregistrer le chemin dans la photo
+					t.setPathPhoto(path);
+					System.out.println(path);
+					file.transferTo(new File(dossier + libelle));
+					List<String> messages = new ArrayList<>();
+					messages.add(String.format("%s (photo ajouter avec succes)", t.getId()));
+					reponse = new Reponse<TypeEtablissement>(0, messages, typeEtablissementMetier.modifier(t));
+
+				} catch (Exception e) {
+
+					reponse = new Reponse<TypeEtablissement>(1, Static.getErreursForException(e), null);
+				}
+
+			} else {
+				List<String> messages = new ArrayList<>();
+				messages.add(String.format("cette formation n'existe pas"));
+				reponse = new Reponse<TypeEtablissement>(reponseParLibelle.getStatus(), reponseParLibelle.getMessages(), null);
+			}
+			return jsonMapper.writeValueAsString(reponse);
+		}
+
+		//////// recuperer une photo avec pour retour tableau de byte
+		//////// /////////////////////////////////
+
+		@GetMapping(value = "/getPhotoTypeEtablissement/{id}/{libelle}", produces = MediaType.IMAGE_JPEG_VALUE)
+		public byte[] getPhotos(@PathVariable Long id, @PathVariable String libelle)
+				throws FileNotFoundException, IOException {
+			String dossier = togetImage + "/" + "photoTypeEtablissement" + "/"+id+ "/"+libelle;
+			File f = new File(dossier);
+			byte[] img = IOUtils.toByteArray(new FileInputStream(f));
+
+			return img;
+		}
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	
 }

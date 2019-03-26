@@ -1,13 +1,14 @@
 package ci.weget.web.metier;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ci.weget.web.dao.GalleryRepository;
-import ci.weget.web.entites.Gallery;
-
+import ci.weget.web.entites.abonnement.Gallery;
+import ci.weget.web.entites.ecole.Formation;
 import ci.weget.web.exception.InvalideTogetException;
 
 @Service
@@ -21,14 +22,24 @@ public class GalleryMetierImpl implements IGalleryMetier{
 	}
 
 	@Override
-	public Gallery modifier(Gallery entity) throws InvalideTogetException {
+	public Gallery modifier(Gallery modif) throws InvalideTogetException {
 		
-		return galleryRepository.save(entity);
+		Optional<Gallery> gallery = galleryRepository.findById(modif.getId());
+
+		if (gallery.isPresent()) {
+			
+			if (gallery.get().getVersion() != modif.getVersion()) {
+				throw new InvalideTogetException("ce libelle a deja ete modifier");
+			}
+
+		} else
+			throw new InvalideTogetException("modif est un objet null");
+		
+		return galleryRepository.save(modif);
 	}
 
 	@Override
 	public List<Gallery> findAll() {
-		// TODO Auto-generated method stub
 		return galleryRepository.findAll();
 	}
 
@@ -40,14 +51,14 @@ public class GalleryMetierImpl implements IGalleryMetier{
 
 	@Override
 	public boolean supprimer(Long id) {
-		// TODO Auto-generated method stub
-		return false;
+		galleryRepository.deleteById(id);
+		return true;
 	}
 
 	@Override
 	public boolean supprimer(List<Gallery> entites) {
-		// TODO Auto-generated method stub
-		return false;
+		galleryRepository.deleteAll(entites);
+		return true;
 	}
 
 	@Override
@@ -65,13 +76,14 @@ public class GalleryMetierImpl implements IGalleryMetier{
 	@Override
 	public List<Gallery> findGalleryParIdDetailAbonnement(Long id) {
 		
-		return galleryRepository.findGallerieParIdDetailAbonnement(id);
+		return null;
 	}
 
+	
 	@Override
-	public List<Gallery> findGalleryParIdMembre(Long id) {
-		
-		return galleryRepository.findGallerieParIdMembre(id);
+	public List<Gallery> findGalleryParIdAbonnement(Long id) {
+		// TODO Auto-generated method stub
+		return galleryRepository.findGallerieParIdAbonnement(id);
 	}
 
 /*	@Override

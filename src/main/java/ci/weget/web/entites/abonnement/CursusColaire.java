@@ -1,8 +1,13 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.abonnement;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_CursusColaire")
@@ -15,6 +20,9 @@ public class CursusColaire extends AbstractEntity  {
     private String formation;
     @Column(columnDefinition="TEXT")
 	private String description;
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name = "id_cvPersonne")
+    CvPersonne cvPersonne;
    
   public CursusColaire() {
 		super();
@@ -27,6 +35,14 @@ public class CursusColaire extends AbstractEntity  {
 		this.etablissement = etablissement;
 		this.diplome = diplome;
 		this.formation = formation;
+	}
+
+	public CvPersonne getCvPersonne() {
+		return cvPersonne;
+	}
+
+	public void setCvPersonne(CvPersonne cvPersonne) {
+		this.cvPersonne = cvPersonne;
 	}
 
 	public String getDate() {

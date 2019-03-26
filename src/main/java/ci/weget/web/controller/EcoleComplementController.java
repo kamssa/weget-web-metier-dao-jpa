@@ -24,27 +24,29 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.Block;
-import ci.weget.web.entites.Chiffre;
-import ci.weget.web.entites.Abonnement;
-import ci.weget.web.entites.Formation;
-import ci.weget.web.entites.Partenaire;
-import ci.weget.web.entites.Temoignage;
+import ci.weget.web.entites.abonnement.Abonnement;
+import ci.weget.web.entites.ecole.Chiffre;
+import ci.weget.web.entites.ecole.Formation;
+import ci.weget.web.entites.ecole.PartenaireEcole;
+import ci.weget.web.entites.ecole.Temoignage;
+import ci.weget.web.entites.espace.Espace;
+import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
-import ci.weget.web.metier.IBlocksMetier;
+import ci.weget.web.metier.IEspaceMetier;
 import ci.weget.web.metier.IChiffreMetier;
 import ci.weget.web.metier.IPanierMetier;
-import ci.weget.web.metier.IPartenaireMetier;
-import ci.weget.web.metier.IDetailAbonnementMetier;
+import ci.weget.web.metier.IPartenaireEcoleMetier;
+import ci.weget.web.metier.IPartenaireTogetMetier;
+import ci.weget.web.metier.IEcoleMetier;
 import ci.weget.web.metier.ITemoignageMetier;
 import ci.weget.web.modeles.Reponse;
 import ci.weget.web.utilitaires.Static;
 
 @RestController
 @CrossOrigin
-public class DetailAbonneComplementController {
+public class EcoleComplementController {
 	@Autowired
-	private IPartenaireMetier partenaireMetier;
+	private IPartenaireEcoleMetier partenaireEcoleMetier;
 	@Autowired
 	private IChiffreMetier chiffreMetier;
 	@Autowired
@@ -59,10 +61,10 @@ public class DetailAbonneComplementController {
 
 	/////////////////////////////////////////////////////////////////////////////
 	////////////// recuperer un partenaire a partir de sonidentifiant ///////////
-	private Reponse<Partenaire> getPaternaireById(Long id) {
-		Partenaire partenaire = null;
+	private Reponse<PartenaireEcole> getPaternaireById(Long id) {
+		PartenaireEcole partenaire = null;
 		try {
-			partenaire = partenaireMetier.findById(id);
+			partenaire = partenaireEcoleMetier.findById(id);
 		} catch (RuntimeException e) {
 			new Reponse<>(1, Static.getErreursForException(e), null);
 		}
@@ -72,7 +74,7 @@ public class DetailAbonneComplementController {
 			new Reponse<>(2, messages, null);
 
 		}
-		return new Reponse<Partenaire>(0, null, partenaire);
+		return new Reponse<PartenaireEcole>(0, null, partenaire);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////
@@ -95,7 +97,7 @@ public class DetailAbonneComplementController {
 
 	/////////////////////////////////////////////////////////////////////////////
 	////////////// recuperer un temoignage a partir de sonidentifiant ///////////
-	private Reponse<Temoignage> getTremoignageById(Long id) {
+	private Reponse<Temoignage> getTemoignageById(Long id) {
 		Temoignage temoignage = null;
 		try {
 			temoignage = temoignageMetier.findById(id);
@@ -115,22 +117,22 @@ public class DetailAbonneComplementController {
 	////////////////// enregistrer un partenaire dans la base de donnee
 	////////////////////////////////////////////////////////////////////////////////////////////// donnee////////////////////////////////
 
-	@PostMapping("/partenaire")
-	public String creer(@RequestBody Partenaire part) throws JsonProcessingException {
-		Reponse<Partenaire> reponse;
+	@PostMapping("/partenaireEcole")
+	public String creer(@RequestBody PartenaireEcole part) throws JsonProcessingException {
+		Reponse<PartenaireEcole> reponse;
 
 		try {
 
-			Partenaire p1 = partenaireMetier.creer(part);
+			PartenaireEcole p1 = partenaireEcoleMetier.creer(part);
 			
 			
 			List<String> messages = new ArrayList<>();
 			messages.add(String.format("%s  à été créer avec succes", p1.getId()));
-			reponse = new Reponse<Partenaire>(0, messages, p1);
+			reponse = new Reponse<PartenaireEcole>(0, messages, p1);
 
 		} catch (InvalideTogetException e) {
 
-			reponse = new Reponse<Partenaire>(1, Static.getErreursForException(e), null);
+			reponse = new Reponse<PartenaireEcole>(1, Static.getErreursForException(e), null);
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
@@ -181,28 +183,28 @@ public class DetailAbonneComplementController {
 	// modifier un partenaire dans la base de donnee
 	///////////////////////////////////////////////////////////////////////////////////////// ///////////////////////////////////////////
 
-	@PutMapping("/partenaire")
-	public String modfierUnPartenaire(@RequestBody Partenaire modif) throws JsonProcessingException {
-		Reponse<Partenaire> reponsePersModif = null;
-		Reponse<Partenaire> reponse = null;
+	@PutMapping("/partenaireEcole")
+	public String modfierUnPartenaire(@RequestBody PartenaireEcole modif) throws JsonProcessingException {
+		Reponse<PartenaireEcole> reponsePersModif = null;
+		Reponse<PartenaireEcole> reponse = null;
 
 		// on recupere la personne a modifier reponsePersModif =
 		reponsePersModif = getPaternaireById(modif.getId());
 		if (reponsePersModif.getBody() != null) {
 			try {
-				Partenaire p2 = partenaireMetier.modifier(modif);
+				PartenaireEcole p2 = partenaireEcoleMetier.modifier(modif);
 				List<String> messages = new ArrayList<>();
 				messages.add(String.format("%s a modifier avec succes", p2.getId()));
-				reponse = new Reponse<Partenaire>(0, messages, p2);
+				reponse = new Reponse<PartenaireEcole>(0, messages, p2);
 			} catch (InvalideTogetException e) {
 
-				reponse = new Reponse<Partenaire>(1, Static.getErreursForException(e), null);
+				reponse = new Reponse<PartenaireEcole>(1, Static.getErreursForException(e), null);
 			}
 
 		} else {
 			List<String> messages = new ArrayList<>();
 			messages.add(String.format("Le partenaire n'existe pas"));
-			reponse = new Reponse<Partenaire>(0, messages, null);
+			reponse = new Reponse<PartenaireEcole>(0, messages, null);
 		}
 
 		return jsonMapper.writeValueAsString(reponse);
@@ -247,7 +249,7 @@ public class DetailAbonneComplementController {
 		Reponse<Temoignage> reponse = null;
 
 		// on recupere la personne a modifier reponsePersModif =
-		reponsePersModif = getTremoignageById(modif.getId());
+		reponsePersModif = getTemoignageById(modif.getId());
 		if (reponsePersModif.getBody() != null) {
 			try {
 				Temoignage t2 = temoignageMetier.modifier(modif);
@@ -268,19 +270,19 @@ public class DetailAbonneComplementController {
 		return jsonMapper.writeValueAsString(reponse);
 
 	}
-	@GetMapping("/partenaire/{id}")
+	@GetMapping("/partenaireEcole/{id}")
 	public String partenaireByIdSousBlock(@PathVariable Long id) throws JsonProcessingException {
 		// Annotation @PathVariable permet de recuperer le paremettre dans URI
-		Reponse<List<Partenaire>> reponse = null;
+		Reponse<PartenaireEcole> reponse = null;
 
 		try {
-			List<Partenaire> part = partenaireMetier.getPartenaireByIdSousBlock(id);
+			PartenaireEcole part = partenaireEcoleMetier.findById(id);
 			List<String> messages = new ArrayList<>();
 			messages.add(String.format("recuperation effectue"));
-			reponse = new Reponse<List<Partenaire>>(0, messages, part);
+			reponse = new Reponse<PartenaireEcole>(0, messages, part);
 		} catch (Exception e) {
 
-			reponse = new Reponse<List<Partenaire>>(1, Static.getErreursForException(e), null);
+			reponse = new Reponse<PartenaireEcole>(1, Static.getErreursForException(e), null);
 		}
 
 		return jsonMapper.writeValueAsString(reponse);
@@ -322,60 +324,49 @@ public class DetailAbonneComplementController {
 		return jsonMapper.writeValueAsString(reponse);
 
 	}
+	@GetMapping("/getPartenaireEcoleByIdEcole/{id}")
+	public String getPartenaireByIdEcole(@PathVariable Long id) throws JsonProcessingException {
+		// Annotation @PathVariable permet de recuperer le paremettre dans URI
+		Reponse<List<PartenaireEcole>> reponse = null;
+
+		try {
+			List<PartenaireEcole> part = partenaireEcoleMetier.getPartenaireByIdEcole(id);
+			List<String> messages = new ArrayList<>();
+			messages.add(String.format("recuperation effectue"));
+			reponse = new Reponse<List<PartenaireEcole>>(0, messages, part);
+		} catch (Exception e) {
+
+			reponse = new Reponse<List<PartenaireEcole>>(1, Static.getErreursForException(e), null);
+		}
+
+		return jsonMapper.writeValueAsString(reponse);
+
+	}
 	@PostMapping("/partenaireLogo")
 	public String creerPartenaireLogo(@RequestParam(name = "image_photo") MultipartFile file, @RequestParam Long id )
 			throws Exception {
-		Reponse<Partenaire> reponse = null;
-		Reponse<Partenaire> reponseParLibelle;
-		// recuperer le libelle à partir du nom de la photo
-		String libelle = file.getOriginalFilename();
-		
-		reponseParLibelle = getPaternaireById(id);
-		Partenaire p = reponseParLibelle.getBody();
-		System.out.println(p);
+		Reponse<PartenaireEcole> reponse;
 
-		String path = "http://wegetback:8080/getLogoPartenaire/" + p.getVersion() + "/"+ p.getId()+"/" + libelle;
-		System.out.println(path);
-		if (reponseParLibelle.getStatus() == 0) {
-			String dossier = togetImage + "/" + "logoPartenaire" + "/"+p.getId()+ "/";
-			File rep = new File(dossier);
+		try {
 
-			if (!file.isEmpty()) {
-				if (!rep.exists() && !rep.isDirectory()) {
-					rep.mkdirs();
-				}
-			}
-			try {
-				// enregistrer le chemin dans la photo
-				p.setPathLogo(path);
-				System.out.println(path);
-				file.transferTo(new File(dossier + libelle));
-				List<String> messages = new ArrayList<>();
-				messages.add(String.format("%s (photo ajouter avec succes)", p.getId()));
-				reponse = new Reponse<Partenaire>(0, messages, partenaireMetier.modifier(p));
-
-			} catch (Exception e) {
-
-				reponse = new Reponse<Partenaire>(1, Static.getErreursForException(e), null);
-			}
-
-		} else {
+			PartenaireEcole p = partenaireEcoleMetier.createImagePartenaireEcole(file, id);
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("cette formation n'existe pas"));
-			reponse = new Reponse<Partenaire>(reponseParLibelle.getStatus(), reponseParLibelle.getMessages(), null);
+			messages.add(String.format(" à été créer avec succes"));
+			reponse = new Reponse<PartenaireEcole>(0, messages, p);
+
+		} catch (Exception e) {
+
+			reponse = new Reponse<PartenaireEcole>(1, Static.getErreursForException(e), null);
 		}
 		return jsonMapper.writeValueAsString(reponse);
 	}
-	@GetMapping(value = "/getLogoPartenaire/{version}/{id}/{libelle}", produces = MediaType.IMAGE_JPEG_VALUE)
-	public byte[] getLogoPartenaire(@PathVariable String version,@PathVariable Long id, @PathVariable String libelle)
+	@GetMapping(value = "/getLogoPartenaireEcole/{version}/{id}/{libelle}", produces = MediaType.IMAGE_JPEG_VALUE)
+	public byte[] getLogoPartenaire(@PathVariable Long version,@PathVariable Long id, @PathVariable String libelle)
 			throws FileNotFoundException, IOException {
 
-		      System.out.println(version);
-				String dossier = togetImage + "/" + "logoPartenaire" + "/"+id+"/";
-				File f = new File(dossier + libelle);
-				byte[] img = IOUtils.toByteArray(new FileInputStream(f));
-
-				return img;
+		byte[] img=null;
+		img= partenaireEcoleMetier.getImagePartenaireEcole(version, id, libelle);
+		return img;
 	}
 	@PostMapping("/temoignagePhoto")
 	public String creerFormationPhoto(@RequestParam(name = "image_photo") MultipartFile file, @RequestParam Long id )
@@ -385,7 +376,7 @@ public class DetailAbonneComplementController {
 		// recuperer le libelle à partir du nom de la photo
 		String libelle = file.getOriginalFilename();
 		
-		reponseParLibelle = getTremoignageById(id);
+		reponseParLibelle = getTemoignageById(id);
 		Temoignage t = reponseParLibelle.getBody();
 		System.out.println(t);
 

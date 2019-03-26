@@ -2,10 +2,10 @@ package ci.weget.web.metier;
 
 import java.util.List;
 
-import ci.weget.web.entites.Block;
+import ci.weget.web.entites.espace.Espace;
 
-public interface IBlocksMetier extends Imetier<Block, Long> {
-Block rechercheParLibelle(String libelle);
-List<Block> chercherBlockParMc(String mc);
-Block findById(Long id);
+public interface IEspaceMetier extends Imetier<Espace, Long> {
+Espace findByLibelle(String libelle);
+List<Espace> getEspaceByMc(String mc);
+
 }

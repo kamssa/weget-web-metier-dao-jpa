@@ -1,4 +1,4 @@
-package ci.weget.web.entites;
+package ci.weget.web.entites.personne;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -11,6 +11,8 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import ci.weget.web.entites.AbstractEntity;
 
 @Entity
 @Table(name = "T_VerificationToken")

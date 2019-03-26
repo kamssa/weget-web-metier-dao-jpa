@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ci.weget.web.entites.FlashInfo;
+import ci.weget.web.entites.ecole.Ecole;
+import ci.weget.web.entites.ecole.FlashInfo;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.IFlashInfoMetier;
 import ci.weget.web.modeles.Reponse;
@@ -54,8 +55,6 @@ public class FlahInfoController {
 		
 		return new Reponse<FlashInfo>(0, null, flash);
 	}
-
-	
 
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////// enregistrer un flash info dans la base de donnee
@@ -119,7 +118,15 @@ public class FlahInfoController {
 		Reponse<List<FlashInfo>> reponse;
 		try {
 			List<FlashInfo> flashs = flashInfoMetier.findAll();
-			reponse = new Reponse<List<FlashInfo>>(0, null, flashs);
+			
+			if (!flashs.isEmpty()) {
+				reponse = new Reponse<List<FlashInfo>>(0, null, flashs);
+			} else {
+				List<String> messages = new ArrayList<>();
+				messages.add("Pas de flash info enregistrées");
+				reponse = new Reponse<List<FlashInfo>>(1, messages, new ArrayList<>());
+			}
+
 		} catch (Exception e) {
 			reponse = new Reponse<List<FlashInfo>>(1, Static.getErreursForException(e), new ArrayList<>());
 		}
