@@ -85,7 +85,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 						"/photoGalleryDetailAbonnement/**", "/abonnement/**","/getAbonnementByMois/**",
 						 "/videoGalleryDetailAbonnement/**", "/updateVue/**","/getDistinctAbonnement/**",
 						 "/profilAbonneLogin/**","/getAbonnementBani/**","/getAbonnementByParam/**",
-						"/detailAbonnementLogo/**","/findParCompetence/**", 
+						"/detailAbonnementLogo/**","/findParCompetence/**", "/cvAbonnement/**",
 						"/https://api.cinetpay.com/v1/**", "/getAbonnementSpecial/**","/getAbonnementByLogin/**",
 						"/getAbonnementByIdEspace/**","/tarifsAbonnementId/**", "/getAbonnementByVille/**" ,"/rechercheParComptence/**", "/rechercheParComptenceOuVille/**","/abonnementAll/**")
 				.permitAll();

@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.PostPersist;
 import javax.persistence.PostUpdate;
 import javax.persistence.Table;
@@ -34,7 +35,8 @@ public class Abonnement extends AbstractEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Espace")
 	private Espace espace;
-	
+	@OneToOne(mappedBy="abonnement")
+	private CvPersonne cvPersonne;
 
 	private int nombreVue;
 	private LocalDateTime dateExpire;
@@ -267,6 +269,14 @@ public class Abonnement extends AbstractEntity {
 
 	public void setPathPhotoCouveture(String pathPhotoCouveture) {
 		this.pathPhotoCouveture = pathPhotoCouveture;
+	}
+
+	public CvPersonne getCvPersonne() {
+		return cvPersonne;
+	}
+
+	public void setCvPersonne(CvPersonne cvPersonne) {
+		this.cvPersonne = cvPersonne;
 	}
 
 	@Override

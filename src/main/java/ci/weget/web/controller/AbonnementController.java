@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -230,6 +229,7 @@ public class AbonnementController {
 		Reponse<List<Abonnement>> reponse;
 		try {
 			List<Abonnement> pers = abonnementMetier.abonnementSpecial();
+			
 			if (!pers.isEmpty()) {
 				reponse = new Reponse<List<Abonnement>>(0, null, pers);
 			} else {
