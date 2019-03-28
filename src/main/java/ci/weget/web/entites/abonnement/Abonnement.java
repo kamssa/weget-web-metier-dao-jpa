@@ -3,7 +3,6 @@ package ci.weget.web.entites.abonnement;
 import java.time.LocalDateTime;
 
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -14,7 +13,6 @@ import javax.persistence.PostUpdate;
 import javax.persistence.Table;
 
 import ci.weget.web.entites.AbstractEntity;
-
 import ci.weget.web.entites.espace.Espace;
 import ci.weget.web.entites.personne.Membre;
 
@@ -35,7 +33,7 @@ public class Abonnement extends AbstractEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Espace")
 	private Espace espace;
-	@OneToOne(mappedBy="abonnement")
+	@OneToOne()
 	private CvPersonne cvPersonne;
 
 	private int nombreVue;
@@ -52,6 +50,7 @@ public class Abonnement extends AbstractEntity {
 
 	@Column(name = "id_Espace", insertable = false, updatable = false)
 	private long idEspace;
+	
 	@Column(name = "id_Personne", insertable = false, updatable = false)
 	private long idPersone;
 	private double longitude;
@@ -270,8 +269,8 @@ public class Abonnement extends AbstractEntity {
 	public void setPathPhotoCouveture(String pathPhotoCouveture) {
 		this.pathPhotoCouveture = pathPhotoCouveture;
 	}
-
-	public CvPersonne getCvPersonne() {
+   
+    public CvPersonne getCvPersonne() {
 		return cvPersonne;
 	}
 

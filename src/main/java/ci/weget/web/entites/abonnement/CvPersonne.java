@@ -42,7 +42,7 @@ public class CvPersonne extends AbstractEntity {
 	private List<String> periodeContrat = new ArrayList<>();
 	@ElementCollection
 	private List<String> disponibilite = new ArrayList<>();
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(mappedBy="cvPersonne", fetch = FetchType.LAZY)
 	@JoinColumn(name = "id_Abonnement")
 	private Abonnement abonnement;
 	@Column(name = "id_Abonnement", insertable = false, updatable = false)
@@ -169,7 +169,7 @@ public class CvPersonne extends AbstractEntity {
 	public void setDisponibilite(List<String> disponibilite) {
 		this.disponibilite = disponibilite;
 	}
-
+	 @JsonIgnore
 	public Abonnement getAbonnement() {
 		return abonnement;
 	}

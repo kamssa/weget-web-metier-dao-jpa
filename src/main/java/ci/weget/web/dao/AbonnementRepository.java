@@ -54,5 +54,6 @@ public interface AbonnementRepository extends JpaRepository<Abonnement, Long> {
 	// ramener les abonnes bani
 	@Query("select ab from Abonnement ab  where ab.utlisateurBanni=true")
 	List<Abonnement> findAbonnementBani();
+	
 
 }
