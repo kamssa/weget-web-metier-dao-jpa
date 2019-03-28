@@ -22,7 +22,7 @@ public class ScheduledTasks {
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
-   /*
+   
 	@Scheduled(fixedRate = 5000)
     public void reportCurrentTime() {
     	List<Abonnement> abonnes = abonnementRepository.findAll();
@@ -37,6 +37,6 @@ public class ScheduledTasks {
           }
     		
     		}
-        log.info("l'heure actuelle est : {}", dateFormat.format(new Date()));
-    }*/
+    //    log.info("l'heure actuelle est : {}", dateFormat.format(new Date()));
+    }
 }
