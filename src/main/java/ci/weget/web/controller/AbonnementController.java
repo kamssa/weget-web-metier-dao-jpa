@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ci.weget.web.entites.abonnement.Abonnement;
-import ci.weget.web.entites.espace.Espace;
 import ci.weget.web.entites.personne.Personne;
 import ci.weget.web.exception.InvalideTogetException;
 import ci.weget.web.metier.IAbonnementMetier;
@@ -352,13 +351,13 @@ public class AbonnementController {
 
 	// mettre a jour le nombre de vue d'un membre
 	@PutMapping("/updateVue")
-	public String modifierVue(@RequestBody Espace espace, @RequestBody Personne p) throws JsonProcessingException {
+	public String modifierVue(@RequestBody Abonnement ab) throws JsonProcessingException {
 		Reponse<Abonnement> reponse;
 
 		try {
-			Abonnement db = abonnementMetier.updateVue(p.getId(), espace.getId());
+			Abonnement db = abonnementMetier.updateVue(ab.getId());
 			List<String> messages = new ArrayList<>();
-			messages.add(String.format("detail block à été modifier avec succes"));
+			messages.add(String.format("abonnemnet à été modifier avec succes"));
 			reponse = new Reponse<Abonnement>(0, messages, db);
 
 		} catch (Exception e) {

@@ -19,7 +19,7 @@ public interface IAbonnementMetier extends Imetier<Abonnement, Long> {
 
 	List<Abonnement> getAbonnementByLogin(String login);
 
-	Abonnement updateVue(long idPersonne, long idEspace) throws InvalideTogetException;
+	Abonnement updateVue(Long id) throws InvalideTogetException;
 
 	List<Abonnement> getAbonnementByVille(String ville);
 

@@ -80,10 +80,9 @@ public class AbonnementMetierImpl implements IAbonnementMetier {
 	}
 
 	@Override
-	public Abonnement updateVue(long idPersonne, long idEspace) throws InvalideTogetException {
+	public Abonnement updateVue(Long id) throws InvalideTogetException {
 
-		Abonnement db = abonnementRepository.findAbonnementByIdPersonneAndIdEspace(idPersonne, idEspace);
-		Abonnement db1 = abonnementRepository.findById(db.getId()).get();
+		Abonnement db1 = abonnementRepository.findById(id).get();
 		int nombreVue = db1.getNombreVue();
 		nombreVue++;
 		db1.setNombreVue(nombreVue);
